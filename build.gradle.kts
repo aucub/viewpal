@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
+    id("io.realm.kotlin") version "1.11.0"
 }
 
 group = "com.pal"
@@ -21,8 +22,26 @@ dependencies {
     // (in a separate module for demo project and in testMain).
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
+
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0-RC2")
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly("org.projectlombok:lombok:1.18.30")
     // https://mvnrepository.com/artifact/io.github.givimad/whisper-jni
     implementation("io.github.givimad:whisper-jni:1.5.2")
+    // https://mvnrepository.com/artifact/dev.langchain4j/langchain4j
+    implementation("dev.langchain4j:langchain4j:0.25.0")
+    // https://mvnrepository.com/artifact/io.objectbox/objectbox-kotlin
+    implementation("io.objectbox:objectbox-kotlin:3.7.1")
+    // https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai
+    implementation("dev.langchain4j:langchain4j-open-ai:0.25.0")
+    implementation("org.xerial:sqlite-jdbc:3.40.1.0")
+    implementation("io.realm.kotlin:library-base:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+
+    implementation("org.jetbrains.compose.material3:material3-desktop:1.5.11")
+    // https://mvnrepository.com/artifact/org.jetbrains.compose.material/material-icons-extended-desktop
+    implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.11")
 }
 
 compose.desktop {
@@ -35,4 +54,9 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
