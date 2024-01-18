@@ -25,7 +25,7 @@ fun App() {
     var transcription by remember { mutableStateOf("") }
     val answer by remember { mutableStateOf("") }
     val captureButtonColor = MaterialTheme.colorScheme.error
-    val captureButtonColorDefault =MaterialTheme.colorScheme.primaryContainer
+    val captureButtonColorDefault = MaterialTheme.colorScheme.primaryContainer
     val whisperRecognizer = WhisperRecognizer()
 
     val listener = object : WhisperRecognizer.RecognitionListener {
@@ -59,7 +59,7 @@ fun App() {
                 modifier = Modifier
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
+            ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -88,8 +88,8 @@ fun App() {
                 }
                 FloatingActionButton(
                     onClick = {
-                        WhisperRecognizer.isRecording.value = WhisperRecognizer.isRecording.value.not()
-                        if (WhisperRecognizer.isRecording.value) {
+                        WhisperRecognizer.isCapturing.value = WhisperRecognizer.isCapturing.value.not()
+                        if (WhisperRecognizer.isCapturing.value) {
                             whisperRecognizer.startRecognition(listener)
                         } else {
                             whisperRecognizer.stopRecognition()
@@ -98,10 +98,10 @@ fun App() {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(16.dp),
-                    containerColor = if (WhisperRecognizer.isRecording.value) captureButtonColor else captureButtonColorDefault
+                    containerColor = if (WhisperRecognizer.isCapturing.value) captureButtonColor else captureButtonColorDefault
                 ) {
                     Icon(
-                        imageVector = if (WhisperRecognizer.isRecording.value) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        imageVector = if (WhisperRecognizer.isCapturing.value) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Capture"
                     )
                 }

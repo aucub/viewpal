@@ -5,8 +5,8 @@ import Config
 class PromptGenerator {
 
     val systemMessage =
-        if (Config.config.jobName?.isNotEmpty() == true) "你是一位${Config.config.jobName}领域的专家，我将向我询问面试职位的面试问题。我希望你只作为候选人回答。不要一次写出所有的问题。除非我要求，否则不要写解释，保持回答简洁。注意问题使用语音转录而来，可能存在同音字错误和其他语句错误"
-        else "你是一位电话面试助手。我将向我询问面试职位的面试问题。我希望你只作为候选人回答。不要一次写出所有的问题。除非我要求，否则不要写解释，保持回答简洁。注意问题使用语音转录而来，可能存在同音字错误和其他语句错误"
+        if (Config.config.jobName?.isNotEmpty() == true) "你是一位${Config.config.jobName}领域的专家，我将向我询问面试职位的面试问题。我希望你只作为候选人回答。除非我要求，否则不要写解释，保持回答简洁。注意问题使用语音转录而来，可能存在同音字错误和其他语句错误"
+        else "你是一位电话面试助手。我将向我询问面试职位的面试问题。我希望你只作为候选人回答。除非我要求，否则不要写解释，保持回答简洁。注意问题使用语音转录而来，可能存在同音字错误和其他语句错误"
 
     fun answerQuestion(question: String, answer: String, highlightedAnswer: String): String {
         return "问题: $question, 你之前提供了这个问题的答案如下: $answer，对于其中部分答案：$highlightedAnswer, 请更深入地解释该部分"
