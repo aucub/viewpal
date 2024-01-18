@@ -15,21 +15,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import whisper.WhisperRecognizer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun App() {
-    var transcription by remember { mutableStateOf("转录文字将在此显示。") }
-    var result by remember { mutableStateOf("结果将在此显示。") }
-    var isRecording by remember { mutableStateOf(false) }
-    var primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
-    var errorColor = MaterialTheme.colorScheme.error
-    var buttonColor by remember { mutableStateOf(primaryContainerColor) }
+
+    var transcription by remember { mutableStateOf("") }
+    val answer by remember { mutableStateOf("") }
+    val captureButtonColor = MaterialTheme.colorScheme.error
+    val captureButtonColorDefault =MaterialTheme.colorScheme.primaryContainer
+    val whisperRecognizer = WhisperRecognizer()
+
+    val listener = object : WhisperRecognizer.RecognitionListener {
+        override fun onResult(text: String) {
+            transcription += text
+        }
+    }
 
     MaterialTheme {
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -44,18 +49,16 @@ fun App() {
                         IconButton(
                             onClick = {/*处理设置*/ }
                         ) {
-                            Icon(Icons.Outlined.Settings, contentDescription = null)
+                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
                         }
                     },
                 )
             }
         ) { innerPadding ->
             Column(
-
                 modifier = Modifier
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-
                 ) {
                 Card(
                     modifier = Modifier
@@ -70,7 +73,6 @@ fun App() {
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -79,24 +81,28 @@ fun App() {
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = result,
+                        text = answer,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-
                 FloatingActionButton(
                     onClick = {
-                        isRecording = !isRecording
-                        buttonColor = if (isRecording) errorColor else primaryContainerColor
+                        WhisperRecognizer.isRecording.value = WhisperRecognizer.isRecording.value.not()
+                        if (WhisperRecognizer.isRecording.value) {
+                            whisperRecognizer.startRecognition(listener)
+                        } else {
+                            whisperRecognizer.stopRecognition()
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    containerColor = if (WhisperRecognizer.isRecording.value) captureButtonColor else captureButtonColorDefault
                 ) {
                     Icon(
-                        imageVector = if (isRecording) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "录音按钮"
+                        imageVector = if (WhisperRecognizer.isRecording.value) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Capture"
                     )
                 }
             }

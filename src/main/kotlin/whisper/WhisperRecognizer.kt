@@ -1,20 +1,14 @@
 package whisper
 
-import io.github.givimad.whisperjni.WhisperContext
-import io.github.givimad.whisperjni.WhisperFullParams
-import io.github.givimad.whisperjni.WhisperJNI
+import io.github.givimad.whisperjni.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.nio.FloatBuffer
-import java.nio.ShortBuffer
+import java.nio.ByteOrder
 import java.nio.file.Paths
-import javax.sound.sampled.AudioFormat
-import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.DataLine
-import javax.sound.sampled.TargetDataLine
+import javax.sound.sampled.*
+
 
 class WhisperRecognizer {
 
@@ -23,11 +17,14 @@ class WhisperRecognizer {
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
     companion object {
-        var whisper = WhisperJNI()
-        val whisperContext: WhisperContext by lazy { whisper.init(Paths.get("/usr/share/whisper.cpp-model-tiny/tiny.bin")) }
+        lateinit var whisper: WhisperJNI
+        lateinit var whisperContext: WhisperContext
+        lateinit var whisperFullParams: WhisperFullParams
+        lateinit var stream: AudioInputStream
+        lateinit var whisperState: WhisperState
+        var isRecording = MutableStateFlow(false)
     }
 
-    private val isRecording = MutableStateFlow(false)
 
     init {
         setRecogniser()
@@ -40,6 +37,14 @@ class WhisperRecognizer {
         }
         WhisperJNI.loadLibrary(loadOptions)
         WhisperJNI.setLibraryLogger(null)
+        whisper = WhisperJNI()
+        val whisperContextParams = WhisperContextParams()
+        whisperContextParams.useGPU = false
+        whisperContext = whisper.init(Paths.get("/usr/share/whisper.cpp-model-medium/medium.bin"), whisperContextParams)
+        whisperFullParams = WhisperFullParams(WhisperSamplingStrategy.GREEDY)
+        whisperFullParams.language = "zh"
+        whisperFullParams.initialPrompt = "以下是普通话的句子"
+        whisperState = whisper.initState(whisperContext)
     }
 
     fun startRecognition(listener: RecognitionListener) = scope.launch {
@@ -49,34 +54,43 @@ class WhisperRecognizer {
         line.open(format)
         line.start()
         isRecording.value = true
-
-        while (isRecording.first()) {
-            val data = getLatestData()
+        stream = AudioInputStream(line)
+        while (isRecording.value) {
+            val data = readSamples()
             val text = recognize(data)
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Default) {
                 listener.onResult(text)
             }
+            delay(10L)
         }
     }
 
-    private fun getLatestData(): FloatArray {
-        val buffer = ByteArray(1024)
-        val bytesRead = line.read(buffer, 0, buffer.size)
-
-        return if (bytesRead > 0) {
-            ByteBuffer.wrap(buffer).asShortBuffer().toFloatArray()
-        } else FloatArray(0)
-    }
-
-    private fun ShortBuffer.toFloatArray(): FloatArray {
-        val floatBuffer = FloatBuffer.allocate(capacity())
-        while (hasRemaining()) {
-            floatBuffer.put(get() / 32768.0f)
+    @Throws(UnsupportedAudioFileException::class, IOException::class)
+    private fun readSamples(): FloatArray {
+        val captureBuffer = ByteBuffer.allocate(512 * 1024)
+        captureBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        val read = stream.read(captureBuffer.array())
+        if (read == -1) {
+            throw IOException("Empty capture")
         }
-        return floatBuffer.array()
+        val shortBuffer = captureBuffer.asShortBuffer()
+        val samples = FloatArray(captureBuffer.capacity() / 2)
+        var i = 0
+        while (shortBuffer.hasRemaining()) {
+            samples[i++] = java.lang.Float.max(
+                -1f,
+                java.lang.Float.min((shortBuffer.get().toFloat()) / Short.MAX_VALUE.toFloat(), 1f)
+            )
+        }
+        return samples
     }
 
     fun stopRecognition() {
+        isRecording.value = false
+        line.stop()
+    }
+
+    fun closeRecognition() {
         isRecording.value = false
         line.stop()
         line.close()
@@ -84,20 +98,24 @@ class WhisperRecognizer {
     }
 
     private fun recognize(data: FloatArray): String {
-        var text = ""
+        val text = ""
         try {
-            val params = WhisperFullParams()
-            val result = whisper.full(whisperContext, params, data, data.size)
+            val result = whisper.fullWithState(whisperContext, whisperState, whisperFullParams, data, data.size)
             if (result != 0) {
                 throw IOException("Transcription failed with code $result")
             }
-            text = whisper.fullGetSegmentText(whisperContext, 0)
-            val numSegments = whisper.fullNSegments(whisperContext)
+            val numSegments = whisper.fullNSegmentsFromState(whisperState)
+            if (numSegments > 0) {
+                for (i in 0..<numSegments) {
+                    print(whisper.fullGetSegmentTextFromState(whisperState, i))
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
         return text
     }
+
 
     interface RecognitionListener {
         fun onResult(text: String)

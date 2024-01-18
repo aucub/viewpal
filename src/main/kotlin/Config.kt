@@ -1,14 +1,18 @@
+import dev.langchain4j.model.openai.OpenAiModelName
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
-import lombok.Data
 import org.mongodb.kbson.ObjectId
 
-@Data
-class Config() : RealmObject {
-    @PrimaryKey
-    var _id: ObjectId = ObjectId()
+class Config : RealmObject {
 
-    var openAiBaseUrl: String? = null
+    companion object {
+        lateinit var config: Config
+    }
+
+    @PrimaryKey
+    var id: ObjectId = ObjectId()
+
+    var openAiBaseUrl: String? = "https://api.openai.com/v1/"
 
     var openAiApiKey: String? = null
 
@@ -18,7 +22,8 @@ class Config() : RealmObject {
 
     var temperature = 0.0
 
-    var enableCodeCompletion = false
+    var preferredModel: String? = OpenAiModelName.GPT_3_5_TURBO
 
-    var preferredModel: String? = null
+    var jobName: String? = null
+
 }
