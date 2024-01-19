@@ -24,9 +24,9 @@ dependencies {
     implementation(compose.desktop.currentOs)
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
     // https://mvnrepository.com/artifact/io.github.givimad/whisper-jni
     implementation("io.github.givimad:whisper-jni:1.5.2")
     // https://mvnrepository.com/artifact/dev.langchain4j/langchain4j
