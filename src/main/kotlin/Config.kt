@@ -6,8 +6,8 @@ import org.mongodb.kbson.ObjectId
 class Config : RealmObject {
 
     companion object {
-        lateinit var config: Config
-        lateinit var whisperConfig: WhisperConfig
+        var config: Config = Config()
+        var whisperConfig: WhisperConfig = WhisperConfig()
     }
 
     @PrimaryKey
@@ -29,7 +29,7 @@ class Config : RealmObject {
 
     class WhisperConfig : RealmObject {
 
-        val sampleRate: Float = 16000F
+        var sampleRate: Float = 16000F
 
         var sampleSizeInBits: Int = 16
 
@@ -39,9 +39,7 @@ class Config : RealmObject {
 
         var lengthMs = 10000
 
-        var keepMs = 200
-
-        var maxMs = 30000
+        var delayMs = 10
 
         var translate: Boolean = false
 
@@ -53,7 +51,7 @@ class Config : RealmObject {
 
         var noContext: Boolean = false
 
-        var useGPU: Boolean = false
+        var useGPU: Boolean = true
 
         var whisperLib: String = "/usr/lib/libwhisper.so"
 

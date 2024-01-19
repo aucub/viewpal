@@ -23,16 +23,10 @@ import whisper.WhisperRecognizer
 fun App() {
 
     var transcription by remember { mutableStateOf("") }
-    val answer by remember { mutableStateOf("") }
+    var answer by remember { mutableStateOf("") }
     val captureButtonColor = MaterialTheme.colorScheme.error
     val captureButtonColorDefault = MaterialTheme.colorScheme.primaryContainer
     val whisperRecognizer = WhisperRecognizer()
-
-    val listener = object : WhisperRecognizer.RecognitionListener {
-        override fun onResult(text: String) {
-            transcription += text
-        }
-    }
 
     MaterialTheme {
         Scaffold(
@@ -88,9 +82,9 @@ fun App() {
                 }
                 FloatingActionButton(
                     onClick = {
-                        WhisperRecognizer.isCapturing.value = WhisperRecognizer.isCapturing.value.not()
+                        WhisperRecognizer.isCapturing.value = !WhisperRecognizer.isCapturing.value
                         if (WhisperRecognizer.isCapturing.value) {
-                            whisperRecognizer.startRecognition(listener)
+                            whisperRecognizer.startRecognition()
                         } else {
                             whisperRecognizer.stopRecognition()
                         }

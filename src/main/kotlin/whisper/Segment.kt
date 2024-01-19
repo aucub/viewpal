@@ -1,16 +1,11 @@
 package whisper
 
-class Segment {
+class Segment(private var text: String?, private var begin: Int, private var end: Int) {
 
     companion object {
-        var segments: List<Segment> = emptyList()
+        var segments = ArrayList<Segment>()
     }
-
-    private var text: String? = ""
 
     private var answer: String? = ""
 
-    private val begin = 0
-
-    private val end = 0
 }

@@ -10,7 +10,6 @@ import java.nio.ByteOrder
 import java.nio.file.Paths
 import javax.sound.sampled.*
 import kotlin.math.max
-import kotlin.math.min
 
 
 class WhisperRecognizer {
@@ -26,9 +25,10 @@ class WhisperRecognizer {
         lateinit var stream: AudioInputStream
         lateinit var whisperState: WhisperState
         var isCapturing = MutableStateFlow(false)
-        var samplesStep = Config.whisperConfig.stepMs * 1e-3 * Config.whisperConfig.sampleRate
-        var samplesLen = Config.whisperConfig.lengthMs * 1e-3 * Config.whisperConfig.sampleRate
-        var samplesKeep = Config.whisperConfig.keepMs * 1e-3 * Config.whisperConfig.sampleRate
+        var samplesStep: Double = 0.0
+        var samplesLen: Double = 0.0
+        var data: FloatArray = FloatArray(samplesLen.toInt())
+        var time = MutableStateFlow(0)
     }
 
     init {
@@ -36,8 +36,10 @@ class WhisperRecognizer {
     }
 
     private fun setRecogniser() {
-        Config.whisperConfig.keepMs = min(Config.whisperConfig.keepMs, Config.whisperConfig.stepMs)
         Config.whisperConfig.lengthMs = max(Config.whisperConfig.lengthMs, Config.whisperConfig.stepMs)
+        samplesStep = Config.whisperConfig.stepMs * 1e-3 * Config.whisperConfig.sampleRate
+        samplesLen = Config.whisperConfig.lengthMs * 1e-3 * Config.whisperConfig.sampleRate
+        data = FloatArray(samplesLen.toInt() / 2)
         val loadOptions = WhisperJNI.LoadOptions().apply {
             logger = WhisperJNI.LibraryLogger { println(it) }
             whisperLib = Paths.get(Config.whisperConfig.whisperLib)
@@ -54,7 +56,7 @@ class WhisperRecognizer {
         whisperState = whisper.initState(whisperContext)
     }
 
-    fun startRecognition(listener: RecognitionListener) = scope.launch {
+    fun startRecognition() = scope.launch {
         val format = AudioFormat(Config.whisperConfig.sampleRate, 16, 1, true, false)
         val info = DataLine.Info(TargetDataLine::class.java, format)
         line = AudioSystem.getLine(info) as TargetDataLine
@@ -63,29 +65,17 @@ class WhisperRecognizer {
         isCapturing.value = true
         stream = AudioInputStream(line)
         while (isCapturing.value) {
-            val data = readSamples()
-            val text = recognize(data)
-            withContext(Dispatchers.Default) {
-                listener.onResult(text)
-            }
-            delay(Config.whisperConfig.keepMs.toLong())
+            readSamples()
+            recognize(time.value, data)
+            delay(Config.whisperConfig.delayMs.toLong())
         }
     }
 
     @Throws(UnsupportedAudioFileException::class, IOException::class)
-    private fun readSamples(): FloatArray {
-        val captureBuffer =
-            ByteBuffer.allocate((Config.whisperConfig.maxMs * 1e-3 * Config.whisperConfig.sampleRate).toInt())
+    private fun readSamples() {
+        val captureBuffer = ByteBuffer.allocate(samplesStep.toInt())
         captureBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        var read: Int = -1
-        if (stream.frameLength * Config.whisperConfig.sampleSizeInBits > 2 * samplesStep) {
-            read = stream.read(captureBuffer.array())
-        }
-        if (stream.frameLength >= samplesStep) {
-            read = stream.read(captureBuffer.array(), 0, samplesLen.toInt())
-        } else {
-            return FloatArray(0)
-        }
+        val read = stream.read(captureBuffer.array())
         if (read == -1) {
             throw IOException("Empty capture")
         }
@@ -98,7 +88,9 @@ class WhisperRecognizer {
                 java.lang.Float.min((shortBuffer.get().toFloat()) / Short.MAX_VALUE.toFloat(), 1f)
             )
         }
-        return samples
+        val result = data.copyOfRange(samples.size, data.size)
+        data = result + samples
+        time.value += Config.whisperConfig.stepMs
     }
 
     fun stopRecognition() {
@@ -113,8 +105,9 @@ class WhisperRecognizer {
         job.cancel()
     }
 
-    private fun recognize(data: FloatArray): String {
-        var text = ""
+    private fun recognize(time: Int, data: FloatArray) {
+        var text: String
+        if (time < Config.whisperConfig.lengthMs) return
         try {
             val result = whisper.fullWithState(whisperContext, whisperState, whisperFullParams, data, data.size)
             if (result != 0) {
@@ -123,17 +116,16 @@ class WhisperRecognizer {
             val numSegments = whisper.fullNSegmentsFromState(whisperState)
             if (numSegments > 0) {
                 for (i in 0..<numSegments) {
-                    text += whisper.fullGetSegmentTextFromState(whisperState, i)
+                    val begin = whisper.fullGetSegmentTimestamp0FromState(whisperState, i).toInt()
+                    val end = whisper.fullGetSegmentTimestamp1FromState(whisperState, i).toInt()
+                    text = whisper.fullGetSegmentTextFromState(whisperState, i)
+                    val segment = Segment(text, begin, end)
+                    Segment.segments.add(segment)
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return text
     }
 
-
-    interface RecognitionListener {
-        fun onResult(text: String)
-    }
 }
