@@ -1,0 +1,72 @@
+name: Gradle
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  package:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Set up JDK
+        uses: actions/setup-java@v4.0.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          server-id: github
+          settings-path: ${{ github.workspace }}
+          check-latest: true
+          cache: "gradle"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.1.0
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.11.1
+        with:
+          gradle-version: current
+          arguments: package
+
+      - uses: actions/upload-artifact@v4.2.0
+        with:
+          name: ${{ matrix.os }}-artifact
+          path: build/compose/binaries/main/*
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Set up JDK
+        uses: actions/setup-java@v4.0.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          server-id: github
+          settings-path: ${{ github.workspace }}
+          check-latest: true
+          cache: "gradle"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.1.0
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.11.1
+        with:
+          gradle-version: current
+          arguments: build
+
+      - uses: actions/upload-artifact@v4.2.0
+        with:
+          name: artifact
+          path: |
+            build/libs
