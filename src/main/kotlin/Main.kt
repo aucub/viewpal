@@ -12,10 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.useResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import whisper.WhisperRecognizer
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,8 +86,8 @@ fun App() {
                 }
                 FloatingActionButton(
                     onClick = {
-                        WhisperRecognizer.isCapturing.value = !WhisperRecognizer.isCapturing.value
-                        if (WhisperRecognizer.isCapturing.value) {
+                        WhisperRecognizer.isRunning = !WhisperRecognizer.isRunning
+                        if (WhisperRecognizer.isRunning) {
                             whisperRecognizer.startRecognition()
                         } else {
                             whisperRecognizer.stopRecognition()
@@ -92,16 +96,32 @@ fun App() {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(16.dp),
-                    containerColor = if (WhisperRecognizer.isCapturing.value) captureButtonColor else captureButtonColorDefault
+                    containerColor = if (WhisperRecognizer.isRunning) captureButtonColor else captureButtonColorDefault
                 ) {
                     Icon(
-                        imageVector = if (WhisperRecognizer.isCapturing.value) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        imageVector = if (WhisperRecognizer.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Capture"
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun about(){
+        Window(title = "AboutLibraries M3 Sample", onCloseRequest = {}) {
+            MaterialTheme {
+                Scaffold(
+                    topBar = { TopAppBar(title = { Text("AboutLibraries Compose M3 Desktop Sample") }) }
+                ) {
+                    LibrariesContainer(useResource("aboutlibraries.json") {
+                        it.bufferedReader().readText()
+                    }, Modifier.fillMaxSize().padding(it))
+                }
+            }
+        }
 }
 
 fun main() = application {
