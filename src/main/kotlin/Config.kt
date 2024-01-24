@@ -39,17 +39,33 @@ class Config : RealmObject {
 
         var lengthMs = 10000
 
-        var delayMs = 10
+        var keepMs = 200
+
+        var delayMs: Long = 1
 
         var translate: Boolean = false
 
         var detectLanguage: Boolean = false
 
+        var noTimestamps: Boolean = false
+
         var language: String = "zh"
+
+        var printSpecial: Boolean = false
+
+        var audioCtx: Int = 0
+
+        var speedUp: Boolean = false
+
+        var noFallback: Boolean = false
+
+        var vadThold = 0.6f
+
+        var freqThold = 100.0f
 
         var initialPrompt: String? = "以下是普通话的句子"
 
-        var noContext: Boolean = false
+        var noContext: Boolean = true
 
         var useGPU: Boolean = true
 
