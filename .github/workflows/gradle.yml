@@ -35,7 +35,7 @@ jobs:
           gradle-version: current
           arguments: package
 
-      - uses: actions/upload-artifact@v4.2.0
+      - uses: actions/upload-artifact@v4.3.0
         with:
           name: ${{ matrix.os }}-artifact
           path: build/compose/binaries/main/*
@@ -65,7 +65,7 @@ jobs:
           gradle-version: current
           arguments: build
 
-      - uses: actions/upload-artifact@v4.2.0
+      - uses: actions/upload-artifact@v4.3.0
         with:
           name: artifact
           path: |
