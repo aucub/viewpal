@@ -40,7 +40,7 @@ dependencies {
 
     implementation("org.jetbrains.compose.material3:material3-desktop:1.5.11")
     // https://mvnrepository.com/artifact/org.jetbrains.compose.material/material-icons-extended-desktop
-    implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.11")
+    implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.12")
 
     // https://mvnrepository.com/artifact/com.mikepenz/aboutlibraries-core
     implementation("com.mikepenz:aboutlibraries-core:10.10.0")
