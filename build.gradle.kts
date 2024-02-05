@@ -38,7 +38,7 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-open-ai:0.25.0")
     implementation("io.realm.kotlin:library-base:1.13.0")
 
-    implementation("org.jetbrains.compose.material3:material3-desktop:1.5.11")
+    implementation("org.jetbrains.compose.material3:material3-desktop:1.5.12")
     // https://mvnrepository.com/artifact/org.jetbrains.compose.material/material-icons-extended-desktop
     implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.11")
 
