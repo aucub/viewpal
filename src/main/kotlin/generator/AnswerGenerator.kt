@@ -1,6 +1,6 @@
 package generator
 
-import Config
+import config.Config
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.memory.chat.TokenWindowChatMemory
 import dev.langchain4j.model.chat.ChatLanguageModel

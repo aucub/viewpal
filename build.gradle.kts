@@ -5,15 +5,15 @@ plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
     id("io.realm.kotlin") version "1.13.0"
-    id("com.mikepenz.aboutlibraries.plugin") version "10.10.0"
+    id("com.mikepenz.aboutlibraries.plugin") version "11.1.0-b01"
 }
 
 group = "com.pal"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    maven("https://repo.nju.edu.cn/repository/maven-public/")
     mavenCentral()
+    maven("https://repo.nju.edu.cn/repository/maven-public/")
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     google()
 }
@@ -33,19 +33,27 @@ dependencies {
     // https://mvnrepository.com/artifact/io.github.givimad/whisper-jni
     implementation("io.github.givimad:whisper-jni:1.5.2")
     // https://mvnrepository.com/artifact/dev.langchain4j/langchain4j
-    implementation("dev.langchain4j:langchain4j:0.25.0")
+    implementation("dev.langchain4j:langchain4j:0.27.0")
     // https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai
-    implementation("dev.langchain4j:langchain4j-open-ai:0.25.0")
+    implementation("dev.langchain4j:langchain4j-open-ai:0.27.0")
     implementation("io.realm.kotlin:library-base:1.13.0")
 
-    implementation("org.jetbrains.compose.material3:material3-desktop:1.5.11")
+    implementation("org.jetbrains.compose.material3:material3-desktop:1.5.12")
     // https://mvnrepository.com/artifact/org.jetbrains.compose.material/material-icons-extended-desktop
-    implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.11")
+    implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.5.12")
 
     // https://mvnrepository.com/artifact/com.mikepenz/aboutlibraries-core
-    implementation("com.mikepenz:aboutlibraries-core:10.10.0")
+    implementation("com.mikepenz:aboutlibraries-core:11.1.0-b01")
 
-    implementation("com.mikepenz:aboutlibraries-compose-m3:10.10.0")
+    implementation("com.mikepenz:aboutlibraries-compose-m3:11.1.0-b01")
+
+    implementation("com.bumble.appyx:spotlight-desktop:2.0.0-alpha10")
+
+    implementation("com.freeletics.flowredux:flowredux:1.2.1")
+
+    implementation("com.freeletics.flowredux:flowredux-jvm:1.2.1")
+
+    implementation("com.freeletics.flowredux:compose:1.2.1")
 }
 
 compose.desktop {

@@ -1,4 +1,6 @@
-import dev.langchain4j.model.openai.OpenAiModelName
+package config
+
+import dev.langchain4j.model.openai.OpenAiChatModelName
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
@@ -23,9 +25,9 @@ class Config : RealmObject {
 
     var temperature = 0.7
 
-    var preferredModel: String = OpenAiModelName.GPT_3_5_TURBO
+    var preferredModel: String = OpenAiChatModelName.GPT_3_5_TURBO.toString()
 
-    var jobName: String? = null
+    var topic: String? = null
 
     class WhisperConfig : RealmObject {
 
@@ -71,7 +73,7 @@ class Config : RealmObject {
 
         var whisperLib: String = "/usr/lib/libwhisper.so"
 
-        var model: String = "/usr/share/whisper.cpp-model-medium/medium.bin"
+        var model: String = "/usr/share/whisper.cpp-model-base/base.bin"
     }
 
 }

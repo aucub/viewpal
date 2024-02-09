@@ -1,6 +1,6 @@
 package whisper
 
-import Config
+import config.Config
 import java.util.concurrent.locks.ReentrantLock
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
@@ -12,12 +12,10 @@ class Audio {
     private var mLenMs = Config.whisperConfig.lengthMs
     private var mSampleRate = Config.whisperConfig.sampleRate
     private var audioFormat: AudioFormat = AudioFormat(
-        AudioFormat.Encoding.PCM_FLOAT,
         mSampleRate,
         Config.whisperConfig.sampleSizeInBits,
         1,
-        4,
-        mSampleRate,
+        true,
         false
     )
     private var targetDataLine: TargetDataLine
@@ -50,7 +48,7 @@ class Audio {
                 if (lineInfo.isNotEmpty() && AudioSystem.isLineSupported(lineInfo.first())) {
                     val info = lineInfo.first() as DataLine.Info
                     targetDataLine = AudioSystem.getLine(info) as TargetDataLine
-                    targetDataLine.open(audioFormat)
+                    targetDataLine.open(audioFormat, (mSampleRate * mLenMs / 1000).toInt())
                     return true
                 }
             }

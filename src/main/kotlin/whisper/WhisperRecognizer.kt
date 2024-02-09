@@ -1,6 +1,6 @@
 package whisper
 
-import Config
+import config.Config
 import io.github.givimad.whisperjni.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,9 +30,9 @@ class WhisperRecognizer {
         var samplesNew = mutableListOf<Float>()
         var samples = mutableListOf<Float>()
         var useVad = false
-        var audio = Audio()
+        lateinit var audio: Audio
         var nNewLine = 1
-        var promptTokens: HashSet<String> = TODO()
+        var promptTokens: HashSet<String> = HashSet()
     }
 
     init {
@@ -59,7 +59,7 @@ class WhisperRecognizer {
         whisperFullParams.initialPrompt = Config.whisperConfig.initialPrompt
         whisperFullParams.temperatureInc =
             if (Config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
-
+        audio = Audio()
         audio.resume()
         val loadOptions = WhisperJNI.LoadOptions().apply {
             logger = WhisperJNI.LibraryLogger { println(it) }
