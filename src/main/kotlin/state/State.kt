@@ -1,15 +1,11 @@
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+package state
 
 sealed class State {
-    companion object {
-        var isCapturing by mutableStateOf(false)
-    }
-
     data object Idle : State()
     data object Capturing : State()
     data object Paused : State()
+
+    data class Error(val message: String) : State()
 }
 
 sealed class Event {
