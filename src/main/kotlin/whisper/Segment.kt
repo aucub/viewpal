@@ -1,12 +1,12 @@
 package whisper
 
+import androidx.compose.runtime.mutableStateListOf
 import kotlin.math.abs
 
 class Segment(var text: String?, var begin: Int, var end: Int) {
 
     companion object {
-        var segments = ArrayList<Segment>()
-
+        var segments = mutableStateListOf<Segment>()
         fun add(newSegment: Segment) {
             if (segments.size > 0) {
                 val existingSegment = segments.last()
@@ -20,7 +20,7 @@ class Segment(var text: String?, var begin: Int, var end: Int) {
         }
     }
 
-    var answer: String? = ""
+    private var answer: String? = ""
 
     override fun toString(): String {
         return "Segment(text=$text, begin=$begin, end=$end, answer=$answer)"

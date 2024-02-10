@@ -16,6 +16,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                         Singleton.whisperRecognizer.startRecognition()
                         state.noChange()
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }
@@ -26,6 +27,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                         Singleton.whisperRecognizer.stopRecognition()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }
@@ -33,6 +35,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                     try {
                         state.override { State.Paused }
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }
@@ -45,6 +48,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                         Singleton.whisperRecognizer.stopRecognition()
                         state.noChange()
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }
@@ -54,6 +58,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                         Singleton.whisperRecognizer.stopRecognition()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }
@@ -61,6 +66,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                     try {
                         state.override { State.Capturing }
                     } catch (t: Throwable) {
+
                         state.override { State.Error("A error occurred") }
                     }
                 }

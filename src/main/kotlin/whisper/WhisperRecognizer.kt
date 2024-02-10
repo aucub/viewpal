@@ -14,8 +14,8 @@ import kotlin.random.Random
 
 class WhisperRecognizer {
     companion object {
-        private val job = Job()
-        private val scope = CoroutineScope(Dispatchers.IO + job)
+        val job = Job()
+        val scope = CoroutineScope(Dispatchers.Default + job)
         val nThreads = minOf(Config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
         lateinit var whisper: WhisperJNI
         lateinit var whisperContext: WhisperContext
@@ -136,8 +136,7 @@ class WhisperRecognizer {
             nIter++
             if (!useVad && (nIter % nNewLine) == 0) {
                 samplesOld = samples.takeLast(nSamplesKeep.toInt()).toMutableList()
-                // Add tokens of the last full-length segment as the prompt
-                if (!Config.whisperConfig.noContext) { // Assuming noContext is equivalent to params.no_context from C++
+                if (!Config.whisperConfig.noContext) {
                     for (i in 0 until nSegments) {
                         val text = whisper.fullGetSegmentText(whisperContext, i)
                         promptTokens += text
@@ -172,12 +171,10 @@ class WhisperRecognizer {
         val nSamples = samples.size
         val nSamplesLast = (sampleRate * lastMs) / 1000
 
-        // Not enough samples - assume no speech
         if (nSamplesLast >= nSamples) {
             return false
         }
 
-        // Optional high-pass filter could be implemented here if needed
         if (freqThold > 0.0f) {
             highPassFilter(samples, freqThold, sampleRate)
         }
@@ -198,14 +195,6 @@ class WhisperRecognizer {
         energyLast /= nSamplesLast
 
         return energyLast <= vadThold * energyAll
-    }
-
-    fun toTimestamp(t: Long): String {
-        var sec = t / 100
-        val msec = t - sec * 100
-        val min = sec / 60
-        sec -= min * 60
-        return "%02d:%02d.%03d".format(min, sec, msec)
     }
 
     fun stopRecognition(): Boolean {

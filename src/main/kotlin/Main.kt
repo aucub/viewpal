@@ -1,4 +1,8 @@
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -11,14 +15,25 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.useResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.bumble.appyx.components.spotlight.Spotlight
 import com.bumble.appyx.components.spotlight.SpotlightModel
+import com.bumble.appyx.components.spotlight.operation.first
+import com.bumble.appyx.components.spotlight.operation.last
+import com.bumble.appyx.components.spotlight.operation.next
+import com.bumble.appyx.components.spotlight.operation.previous
 import com.bumble.appyx.components.spotlight.ui.slider.SpotlightSlider
+import com.bumble.appyx.interactions.core.AppyxInteractionsContainer
+import com.bumble.appyx.interactions.core.ui.gesture.GestureSettleConfig
 import com.bumble.appyx.interactions.core.ui.helper.AppyxComponentSetup
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import kotlinx.coroutines.launch
@@ -28,6 +43,7 @@ import state.StateMachine
 import whisper.Audio
 import whisper.Segment
 import whisper.WhisperRecognizer
+import kotlin.math.roundToInt
 
 object Singleton {
     val whisperRecognizer by lazy {
@@ -36,7 +52,7 @@ object Singleton {
     var audio: Audio = Audio()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
@@ -45,24 +61,39 @@ fun App() {
     val scope = rememberCoroutineScope()
     Segment.segments.add(Segment("", 0, 0))
     val model = remember {
-        SpotlightModel<Segment>(
-            items = List(1) { Segment.segments[it] },
-            initialActiveIndex = 0f,
+        SpotlightModel(
+            items = Segment.segments,
+            initialActiveIndex = (Segment.segments.size - 1).toFloat(),
             savedStateMap = null
         )
     }
-    val spotlight =
-        Spotlight(
-            scope = scope,
-            model = model,
-            visualisation = { SpotlightSlider(it, model.currentState) },
-            gestureFactory = { SpotlightSlider.Gestures(it) }
-        )
+    val spotlight = Spotlight(
+        scope = scope,
+        model = model,
+        visualisation = { SpotlightSlider(it, model.currentState) },
+        animationSpec = spring(stiffness = Spring.StiffnessVeryLow / 4),
+        gestureFactory = {
+            SpotlightSlider.Gestures(
+                transitionBounds = it,
+                orientation = Orientation.Vertical,
+                reverseOrientation = true,
+            )
+        },
+        gestureSettleConfig = GestureSettleConfig(
+            completionThreshold = 0.2f,
+            completeGestureSpec = spring(),
+            revertGestureSpec = spring(),
+        ),
+    )
+    val actions = mapOf(
+        "First" to { spotlight.first() },
+        "Prev" to { spotlight.previous() },
+        "Next" to { spotlight.next() },
+        "Last" to { spotlight.last() },
+    )
     AppyxComponentSetup(spotlight)
-    var transcription by remember { mutableStateOf("") }
-    var answer by remember { mutableStateOf("") }
-    val captureButtonColor = MaterialTheme.colorScheme.error
-    val captureButtonColorDefault = MaterialTheme.colorScheme.primaryContainer
+    val capturingButtonColor = MaterialTheme.colorScheme.error
+    val captureButtonColor = MaterialTheme.colorScheme.primaryContainer
 
     MaterialTheme {
         Scaffold(
@@ -87,27 +118,37 @@ fun App() {
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceAround
             ) {
-                /* AppyxInteractionsContainer(
-                     appyxComponent = spotlight,
-                     screenWidthPx = 420,
-                     screenHeightPx = 360,
-                 ) {
-                     Card(
-                         modifier = Modifier
-                             .fillMaxWidth()
-                             .padding(16.dp),
-                         shape = RoundedCornerShape(8.dp)
-                     ) {
-                         Text(
-                             text = it.interactionTarget.text.toString(),
-                             style = MaterialTheme.typography.titleMedium,
-                             modifier = Modifier.padding(8.dp)
-                         )
-                     }
-                     Card(
+                Spacer(Modifier.height(16.dp))
+                AppyxInteractionsContainer(
+                    appyxComponent = spotlight,
+                    screenWidthPx = (LocalWindowInfo.current.containerSize.width * LocalDensity.current.density).roundToInt(),
+                    screenHeightPx = (LocalWindowInfo.current.containerSize.height * LocalDensity.current.density).roundToInt(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    Text(
+                        text = it.interactionTarget.text.toString(),
+                        color = Color.Black,
+                    )
+                    /*Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = it.interactionTarget.text.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(8.dp),
+                            color = Color.Black
+                        )
+                    }*/
+                    /* Card(
                          modifier = Modifier
                              .fillMaxWidth()
                              .padding(16.dp),
@@ -116,10 +157,30 @@ fun App() {
                          Text(
                              text = it.interactionTarget.answer.toString(),
                              style = MaterialTheme.typography.titleMedium,
-                             modifier = Modifier.padding(8.dp)
+                             modifier = Modifier.padding(8.dp),
+                             color = Color.Black
                          )
-                     }
-                 }*/
+                     }*/
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    actions.keys.forEachIndexed { index, key ->
+                        Box(
+                            modifier = Modifier
+                                .clickable { actions.getValue(key).invoke() }
+                                .padding(horizontal = 18.dp, vertical = 4.dp)
+                        ) {
+                            Text(key)
+                        }
+                        if (index != actions.size - 1) {
+                            Spacer(modifier = Modifier.requiredWidth(8.dp))
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -161,10 +222,10 @@ fun App() {
                         modifier = Modifier.padding(end = 16.dp),
                         containerColor = when (state) {
                             State.Capturing -> {
-                                captureButtonColor
+                                capturingButtonColor
                             }
 
-                            else -> captureButtonColorDefault
+                            else -> captureButtonColor
                         }
                     ) {
                         Icon(
@@ -185,8 +246,7 @@ fun App() {
                         )
                     }
                 }
-
-
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
@@ -211,6 +271,7 @@ fun About() {
 fun main() = application {
     Window(
         title = "viewpal",
+        icon = painterResource("icon.png"),
         onCloseRequest = ::exitApplication
     ) {
         App()
