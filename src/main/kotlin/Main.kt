@@ -1,6 +1,5 @@
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -20,13 +19,13 @@ import androidx.compose.ui.window.application
 import com.bumble.appyx.components.spotlight.Spotlight
 import com.bumble.appyx.components.spotlight.SpotlightModel
 import com.bumble.appyx.components.spotlight.ui.slider.SpotlightSlider
-import com.bumble.appyx.interactions.core.AppyxInteractionsContainer
 import com.bumble.appyx.interactions.core.ui.helper.AppyxComponentSetup
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import kotlinx.coroutines.launch
 import state.Event
 import state.State
 import state.StateMachine
+import whisper.Audio
 import whisper.Segment
 import whisper.WhisperRecognizer
 
@@ -34,6 +33,7 @@ object Singleton {
     val whisperRecognizer by lazy {
         WhisperRecognizer()
     }
+    var audio: Audio = Audio()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +43,7 @@ fun App() {
     val statemachine = StateMachine()
     val state by statemachine.state.collectAsState(State.Idle)
     val scope = rememberCoroutineScope()
-    Segment.segments.add(Segment("Test", 0, 0))
+    Segment.segments.add(Segment("", 0, 0))
     val model = remember {
         SpotlightModel<Segment>(
             items = List(1) { Segment.segments[it] },
@@ -90,36 +90,36 @@ fun App() {
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                AppyxInteractionsContainer(
-                    appyxComponent = spotlight,
-                    screenWidthPx = 420,
-                    screenHeightPx = 360,
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = it.interactionTarget.text.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = it.interactionTarget.answer.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
+                /* AppyxInteractionsContainer(
+                     appyxComponent = spotlight,
+                     screenWidthPx = 420,
+                     screenHeightPx = 360,
+                 ) {
+                     Card(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .padding(16.dp),
+                         shape = RoundedCornerShape(8.dp)
+                     ) {
+                         Text(
+                             text = it.interactionTarget.text.toString(),
+                             style = MaterialTheme.typography.titleMedium,
+                             modifier = Modifier.padding(8.dp)
+                         )
+                     }
+                     Card(
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .padding(16.dp),
+                         shape = RoundedCornerShape(8.dp)
+                     ) {
+                         Text(
+                             text = it.interactionTarget.answer.toString(),
+                             style = MaterialTheme.typography.titleMedium,
+                             modifier = Modifier.padding(8.dp)
+                         )
+                     }
+                 }*/
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

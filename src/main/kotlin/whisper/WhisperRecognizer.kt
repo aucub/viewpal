@@ -1,5 +1,6 @@
 package whisper
 
+import Singleton
 import config.Config
 import io.github.givimad.whisperjni.*
 import kotlinx.coroutines.CoroutineScope
@@ -7,16 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 class WhisperRecognizer {
-
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
-
     companion object {
+        private val job = Job()
+        private val scope = CoroutineScope(Dispatchers.IO + job)
         val nThreads = minOf(Config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
         lateinit var whisper: WhisperJNI
         lateinit var whisperContext: WhisperContext
@@ -28,11 +27,12 @@ class WhisperRecognizer {
         var nSamples30s: Double = 0.0
         var samplesOld = mutableListOf<Float>()
         var samplesNew = mutableListOf<Float>()
-        var samples = mutableListOf<Float>()
+        lateinit var samples: FloatArray
         var useVad = false
-        lateinit var audio: Audio
         var nNewLine = 1
-        var promptTokens: HashSet<String> = HashSet()
+        var promptTokens: String? = Config.whisperConfig.initialPrompt
+        var tLast = 0
+        var tFirst = 0
     }
 
     init {
@@ -59,8 +59,6 @@ class WhisperRecognizer {
         whisperFullParams.initialPrompt = Config.whisperConfig.initialPrompt
         whisperFullParams.temperatureInc =
             if (Config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
-        audio = Audio()
-        audio.resume()
         val loadOptions = WhisperJNI.LoadOptions().apply {
             logger = WhisperJNI.LibraryLogger { println(it) }
             whisperLib = Paths.get(Config.whisperConfig.whisperLib)
@@ -71,7 +69,6 @@ class WhisperRecognizer {
         val whisperContextParams = WhisperContextParams()
         whisperContextParams.useGPU = Config.whisperConfig.useGPU
         whisperContext = whisper.init(Paths.get(Config.whisperConfig.model), whisperContextParams)
-
         if (!whisper.isMultilingual(whisperContext)) {
             if (Config.whisperConfig.translate) {
                 Config.whisperConfig.translate = false
@@ -83,28 +80,21 @@ class WhisperRecognizer {
     fun startRecognition() = scope.launch {
         isRunning = true
         var nIter = 0
-        var tLast = System.nanoTime()
         while (isRunning) {
             if (!isRunning) {
                 break
             }
+            var samplesArray = Singleton.audio.get()
+            if (samplesArray == null) {
+                Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
+                continue
+            }
+            samplesNew = samplesArray.toMutableList()
+            tLast = (tLast + samplesNew.size / Config.whisperConfig.sampleRate * 2).toInt()
             if (!useVad) {
-                while (true) {
-                    audio.get(Config.whisperConfig.stepMs, samplesNew)
-                    if (samplesNew.size > 2 * nSamplesStep) {
-                        System.err.println("警告：无法足够快地处理音频，丢弃音频......")
-                        audio.clear()
-                        continue
-                    }
-                    if (samplesNew.size >= nSamplesStep) {
-                        audio.clear()
-                        break
-                    }
-                    Thread.sleep(Config.whisperConfig.delayMs)
-                }
                 val nSamplesNew = samplesNew.size
                 val nSamplesTake = min(samplesOld.size, max(0, (nSamplesKeep + nSamplesLen - nSamplesNew).toInt()))
-                val samples = FloatArray(nSamplesNew + samplesOld.size)
+                samples = FloatArray(nSamplesNew + nSamplesTake)
                 for (i in 0 until nSamplesTake) {
                     samples[i] = samplesOld[samplesOld.size - nSamplesTake + i]
                 }
@@ -112,27 +102,21 @@ class WhisperRecognizer {
                     samples[nSamplesTake + i] = samplesNew[i]
                 }
                 samplesOld = samples.toMutableList()
+                tFirst = (tLast - (nSamplesNew + nSamplesTake) / Config.whisperConfig.sampleRate * 2).toInt()
             } else {
-                val tNow = System.nanoTime()
-                val tDiff = TimeUnit.NANOSECONDS.toMillis(tNow - tLast)
-                if (tDiff < 2000) {
-                    Thread.sleep(100)
-                    continue
-                }
-                audio.get(2000, samplesNew)
                 if (vadSimple(
                         samplesNew.toFloatArray(), Config.whisperConfig.sampleRate,
-                        1000, Config.whisperConfig.vadThold, Config.whisperConfig.freqThold, false
+                        1000, Config.whisperConfig.vadThold, Config.whisperConfig.freqThold
                     )
                 ) {
-                    audio.get(Config.whisperConfig.lengthMs, samples.toMutableList())
+                    samples = samplesArray
+                    tFirst = (tLast - samples.size / Config.whisperConfig.sampleRate * 2).toInt()
                 } else {
-                    Thread.sleep(100)
+                    Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
                     continue
                 }
-                tLast = tNow
             }
-            if (whisper.full(whisperContext, whisperFullParams, samples.toFloatArray(), samples.size) != 0) {
+            if (whisper.full(whisperContext, whisperFullParams, samples, samples.size) != 0) {
                 println("音频处理失败")
                 return@launch
             }
@@ -141,25 +125,26 @@ class WhisperRecognizer {
                 for (i in 0 until nSegments) {
                     val text = whisper.fullGetSegmentText(whisperContext, i)
                     if (whisperFullParams.noTimestamps) {
+                        Segment.add(Segment(text, tFirst, tLast))
                     } else {
-                        val t0 = whisper.fullGetSegmentTimestamp0(whisperContext, i)
-                        val t1 = whisper.fullGetSegmentTimestamp1(whisperContext, i)
+                        val t0 = whisper.fullGetSegmentTimestamp0(whisperContext, i) / 100
+                        val t1 = whisper.fullGetSegmentTimestamp1(whisperContext, i) / 100
+                        Segment.add(Segment(text, (tFirst + t0).toInt(), (tFirst + t1).toInt()))
                     }
                 }
             }
             nIter++
             if (!useVad && (nIter % nNewLine) == 0) {
                 samplesOld = samples.takeLast(nSamplesKeep.toInt()).toMutableList()
-
                 // Add tokens of the last full-length segment as the prompt
                 if (!Config.whisperConfig.noContext) { // Assuming noContext is equivalent to params.no_context from C++
-                    promptTokens.clear()
                     for (i in 0 until nSegments) {
                         val text = whisper.fullGetSegmentText(whisperContext, i)
-                        promptTokens.add(text)
+                        promptTokens += text
                     }
                 }
             }
+            Thread.sleep(Config.whisperConfig.delayMs)
         }
     }
 
@@ -182,8 +167,7 @@ class WhisperRecognizer {
         sampleRate: Float,
         lastMs: Int,
         vadThold: Float,
-        freqThold: Float,
-        verbose: Boolean
+        freqThold: Float
     ): Boolean {
         val nSamples = samples.size
         val nSamplesLast = (sampleRate * lastMs) / 1000
@@ -225,7 +209,7 @@ class WhisperRecognizer {
     }
 
     fun stopRecognition(): Boolean {
-        audio.pause()
+        isRunning = false
         return true
     }
 

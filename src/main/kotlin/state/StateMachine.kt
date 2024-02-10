@@ -12,6 +12,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
             inState<State.Capturing> {
                 onEnter { state ->
                     try {
+                        Singleton.audio.start()
                         Singleton.whisperRecognizer.startRecognition()
                         state.noChange()
                     } catch (t: Throwable) {
@@ -21,6 +22,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
 
                 on<Event.StartNewSession> { _, state ->
                     try {
+                        Singleton.audio.clear()
                         Singleton.whisperRecognizer.stopRecognition()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
@@ -29,7 +31,6 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                 }
                 on<Event.Pause> { _, state ->
                     try {
-                        Singleton.whisperRecognizer.stopRecognition()
                         state.override { State.Paused }
                     } catch (t: Throwable) {
                         state.override { State.Error("A error occurred") }
@@ -40,6 +41,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
             inState<State.Paused> {
                 onEnter { state ->
                     try {
+                        Singleton.audio.pause()
                         Singleton.whisperRecognizer.stopRecognition()
                         state.noChange()
                     } catch (t: Throwable) {
@@ -48,6 +50,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                 }
                 on<Event.StartNewSession> { _, state ->
                     try {
+                        Singleton.audio.clear()
                         Singleton.whisperRecognizer.stopRecognition()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
@@ -56,7 +59,6 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                 }
                 on<Event.Capture> { _, state ->
                     try {
-                        Singleton.whisperRecognizer.startRecognition()
                         state.override { State.Capturing }
                     } catch (t: Throwable) {
                         state.override { State.Error("A error occurred") }
@@ -66,7 +68,6 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
             inState<State.Idle> {
                 on<Event.Capture> { _, state ->
                     try {
-                        Singleton.whisperRecognizer.startRecognition()
                         state.override { State.Capturing }
                     } catch (t: Throwable) {
                         state.override { State.Error("A error occurred") }
