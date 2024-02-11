@@ -1,9 +1,11 @@
+import Singleton.statemachine
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -13,7 +15,10 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -50,25 +55,23 @@ object Singleton {
         WhisperRecognizer()
     }
     var audio: Audio = Audio()
+    val statemachine = StateMachine()
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
-    val statemachine = StateMachine()
+    val coroutineScope = rememberCoroutineScope()
     val state by statemachine.state.collectAsState(State.Idle)
-    val scope = rememberCoroutineScope()
-    Segment.segments.add(Segment("", 0, 0))
-    val model = remember {
-        SpotlightModel(
-            items = Segment.segments,
-            initialActiveIndex = (Segment.segments.size - 1).toFloat(),
-            savedStateMap = null
-        )
-    }
+    Segment.init()
+    val model = SpotlightModel(
+        items = Segment.segments,
+        initialActiveIndex = (Segment.segments.size - 1).toFloat(),
+        savedStateMap = null
+    )
     val spotlight = Spotlight(
-        scope = scope,
+        scope = coroutineScope,
         model = model,
         visualisation = { SpotlightSlider(it, model.currentState) },
         animationSpec = spring(stiffness = Spring.StiffnessVeryLow / 4),
@@ -89,7 +92,9 @@ fun App() {
         "First" to { spotlight.first() },
         "Prev" to { spotlight.previous() },
         "Next" to { spotlight.next() },
-        "Last" to { spotlight.last() },
+        "Last" to {
+            spotlight.last()
+        },
     )
     AppyxComponentSetup(spotlight)
     val capturingButtonColor = MaterialTheme.colorScheme.error
@@ -122,7 +127,19 @@ fun App() {
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceAround
             ) {
-                Spacer(Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = Segment.segments.last().text.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(8.dp),
+                        color = Color.Black
+                    )
+                }
                 AppyxInteractionsContainer(
                     appyxComponent = spotlight,
                     screenWidthPx = (LocalWindowInfo.current.containerSize.width * LocalDensity.current.density).roundToInt(),
@@ -131,36 +148,34 @@ fun App() {
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    Text(
-                        text = it.interactionTarget.text.toString(),
-                        color = Color.Black,
-                    )
-                    /*Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = it.interactionTarget.text.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(8.dp),
-                            color = Color.Black
-                        )
-                    }*/
-                    /* Card(
-                         modifier = Modifier
-                             .fillMaxWidth()
-                             .padding(16.dp),
-                         shape = RoundedCornerShape(8.dp)
-                     ) {
-                         Text(
-                             text = it.interactionTarget.answer.toString(),
-                             style = MaterialTheme.typography.titleMedium,
-                             modifier = Modifier.padding(8.dp),
-                             color = Color.Black
-                         )
-                     }*/
+                    Column(Modifier.fillMaxSize()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = it.interactionTarget.prompt.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(8.dp),
+                                color = Color.Black
+                            )
+                        }
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 32.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = it.interactionTarget.answer.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(8.dp),
+                                color = Color.Black
+                            )
+                        }
+                    }
                 }
                 Row(
                     modifier = Modifier
@@ -191,7 +206,7 @@ fun App() {
                         is State.Paused, State.Capturing -> {
                             FloatingActionButton(
                                 onClick = {
-                                    scope.launch {
+                                    coroutineScope.launch {
                                         statemachine.dispatch(Event.StartNewSession)
                                     }
                                 },
@@ -207,7 +222,7 @@ fun App() {
                     Spacer(Modifier.weight(1f, true))
                     FloatingActionButton(
                         onClick = {
-                            scope.launch {
+                            coroutineScope.launch {
                                 when (state) {
                                     State.Capturing -> {
                                         statemachine.dispatch(Event.Pause)

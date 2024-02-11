@@ -2,11 +2,12 @@ package whisper
 
 import config.Config
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
+import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
@@ -17,7 +18,9 @@ import kotlin.concurrent.withLock
 
 class Audio {
     companion object {
-        private val scope = CoroutineScope(Dispatchers.IO)
+        private val scope = CoroutineScope(
+            Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        )
         private var mLenMs = Config.whisperConfig.lengthMs
         private var mSampleRate = Config.whisperConfig.sampleRate
         private var audioFormat: AudioFormat = AudioFormat(

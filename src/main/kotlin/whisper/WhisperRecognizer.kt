@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 class WhisperRecognizer {
     companion object {
-        val job = Job()
+        private val job = Job()
         val scope = CoroutineScope(Dispatchers.Default + job)
         val nThreads = minOf(Config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
         lateinit var whisper: WhisperJNI

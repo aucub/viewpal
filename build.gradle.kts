@@ -33,6 +33,9 @@ dependencies {
     implementation("com.mikepenz:aboutlibraries-compose-m3:11.1.0-b01")
     implementation("com.bumble.appyx:spotlight-desktop:2.0.0-alpha10")
     implementation("com.freeletics.flowredux:flowredux:1.2.1")
+    implementation("io.github.oshai:kotlin-logging:6.0.3")
+    implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
+    implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
 }
 
 compose.desktop {
