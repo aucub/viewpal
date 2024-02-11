@@ -12,7 +12,6 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
     private val logger = KotlinLogging.logger {}
 
     init {
-        println("初始化")
         spec {
             inState<State.Capturing> {
                 onEnter { state ->
@@ -30,6 +29,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                     try {
                         Singleton.audio.clear()
                         Singleton.whisperRecognizer.stopRecognition()
+                        Segment.clear()
                         Segment.init()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
@@ -62,6 +62,7 @@ class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<Sta
                     try {
                         Singleton.audio.clear()
                         Singleton.whisperRecognizer.stopRecognition()
+                        Segment.clear()
                         Segment.init()
                         state.override { State.Idle }
                     } catch (t: Throwable) {
