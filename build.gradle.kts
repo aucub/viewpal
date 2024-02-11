@@ -38,6 +38,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")
     implementation("com.darkrockstudios:mpfilepicker-jvm:3.1.0")
+    implementation("io.github.softartdev:theme-material3:0.6.3")
+
 }
 
 compose.desktop {
