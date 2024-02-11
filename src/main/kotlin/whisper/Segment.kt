@@ -48,7 +48,7 @@ class Segment(var text: String?, var begin: Int, var end: Int) {
                 segments.add(newSegment)
                 index = segments.size - 1
             }
-            /*var dialogue = StringBuffer()
+            var dialogue = StringBuffer()
             for (segment in segments) {
                 dialogue.append(segment.text)
             }
@@ -56,7 +56,7 @@ class Segment(var text: String?, var begin: Int, var end: Int) {
             newSegment.answer = AnswerGenerator.generateAnswer(newSegment.prompt!!)
             segmentsLock.withLock {
                 segments[index] = newSegment
-            }*/
+            }
         }
     }
 

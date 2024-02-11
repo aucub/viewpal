@@ -41,9 +41,6 @@ import com.bumble.appyx.interactions.core.ui.gesture.GestureSettleConfig
 import com.bumble.appyx.interactions.core.ui.helper.AppyxComponentSetup
 import com.darkrockstudios.libraries.mpfilepicker.FilePicker
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
-import com.mohamedrejeb.calf.picker.FilePickerFileType
-import com.mohamedrejeb.calf.picker.FilePickerSelectionMode
-import com.mohamedrejeb.calf.picker.rememberFilePickerLauncher
 import config.Config
 import config.Config.Companion.whisperConfig
 import dev.langchain4j.model.openai.OpenAiChatModelName
@@ -54,10 +51,6 @@ import state.StateMachine
 import whisper.Audio
 import whisper.Segment
 import whisper.WhisperRecognizer
-import java.awt.Font
-import javax.swing.JFileChooser
-import javax.swing.SwingUtilities
-import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.math.roundToInt
 
 
@@ -134,7 +127,8 @@ fun App() {
                         }
                         IconButton(
                             onClick = {
-                                Singleton.showSettingsWindow = true}
+                                Singleton.showSettingsWindow = true
+                            }
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
@@ -317,7 +311,12 @@ fun Settings() {
                         .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text("OpenAI Config", modifier = Modifier.padding(vertical = 10.dp),fontSize = 30.sp,fontWeight = FontWeight.Bold)
+                    Text(
+                        "OpenAI Config",
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     // OpenAI基础URL
                     TextField(
                         value = Config.config.openAiBaseUrl,
@@ -359,7 +358,7 @@ fun Settings() {
 
                         // 数值展示
                         Text(
-                            text = String.format("%.2f", temperature),
+                            text = String.format("%.1f", temperature),
                             modifier = Modifier.width(64.dp).padding(horizontal = 16.dp)
                         )
 
@@ -388,7 +387,10 @@ fun Settings() {
                             onValueChange = { },
                             label = { Text("Preferred Model") },
                             trailingIcon = {
-                                Icon(Icons.Filled.ArrowDropDown, "Expand dropdown menu", Modifier.clickable { expanded = true })
+                                Icon(
+                                    Icons.Filled.ArrowDropDown,
+                                    "Expand dropdown menu",
+                                    Modifier.clickable { expanded = true })
                             },
                             readOnly = true,
                             modifier = Modifier.fillMaxWidth().clickable { expanded = true }
@@ -425,7 +427,12 @@ fun Settings() {
                         label = { Text("Topic") }
                     )
                     // Whisper设置的标题
-                    Text("Whisper Config", modifier = Modifier.padding(vertical = 10.dp),fontSize = 30.sp,fontWeight = FontWeight.Bold)
+                    Text(
+                        "Whisper Config",
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     // 线程数
                     TextField(
                         value = whisperConfig.nThreads.toString(),
@@ -471,6 +478,12 @@ fun Settings() {
                         onCheckedChange = { whisperConfig.detectLanguage = it }
                     )
 
+                    TextField(
+                        value = whisperConfig.language,
+                        onValueChange = { whisperConfig.language = it },
+                        label = { Text("Language") }
+                    )
+
                     // 初始提示文本
                     OutlinedTextField(
                         value = whisperConfig.initialPrompt ?: "",
@@ -492,136 +505,46 @@ fun Settings() {
                         isChecked = whisperConfig.useGPU,
                         onCheckedChange = { whisperConfig.useGPU = it }
                     )
-
-                    var whisperLibPath by remember { mutableStateOf(whisperConfig.whisperLib) }
-                    var modelPath by remember { mutableStateOf(whisperConfig.model) }
-
-                    var showLibPicker by remember { mutableStateOf(false) }
+                    var showWhisperLibPicker by remember { mutableStateOf(false) }
                     var showModelPicker by remember { mutableStateOf(false) }
 
-                    var showFilePicker by remember { mutableStateOf(false) }
-
-                    val fileType = listOf("jpg", "png")
-                    FilePicker(show = showFilePicker, fileExtensions = fileType) { platformFile ->
-                        showFilePicker = false
-                    }
-                    val whisperLibPickerLauncher = rememberFilePickerLauncher(
-                        type = FilePickerFileType.All,
-                        selectionMode = FilePickerSelectionMode.Single,
-                        onResult = { files ->
-                            files.firstOrNull()?.let { file ->
-                                whisperLibPath = file.path.toString()
-                            }
-                        }
-                    )
-
-                    val modelPickerLauncher = rememberFilePickerLauncher(
-                        type = FilePickerFileType.All,
-                        selectionMode = FilePickerSelectionMode.Single,
-                        onResult = { files ->
-                            files.firstOrNull()?.let { file ->
-                                modelPath = file.path.toString()
-                            }
-                        }
-                    )
-
-                    FilePicker(showLibPicker, fileExtensions = listOf("jpg", "png")) { file ->
-                        whisperLibPath = file?.path ?: "none selected"
-                        showLibPicker = false
+                    FilePicker(showWhisperLibPicker, fileExtensions = listOf("so", "dylib")) { file ->
+                        whisperConfig.whisperLib = file?.path ?: whisperConfig.whisperLib
+                        showWhisperLibPicker = false
                     }
 
-                    FilePicker(showModelPicker) { file ->
-                        modelPath = file?.path ?: "none selected"
+                    FilePicker(showModelPicker, fileExtensions = listOf("bin")) { file ->
+                        whisperConfig.model = file?.path ?: whisperConfig.model
                         showModelPicker = false
                     }
 
                     Column {
                         Text("Whisper Library")
                         OutlinedTextField(
-                            value = whisperLibPath,
-                            onValueChange = { whisperLibPath = it },
+                            value = whisperConfig.whisperLib,
+                            onValueChange = { whisperConfig.whisperLib = it },
                             label = { Text("Whisper Library Path") },
                             modifier = Modifier.padding(16.dp).fillMaxWidth()
                         )
-                        Button(
+                        FilledTonalButton(
                             onClick = {
-                                modelPickerLauncher.launch()
+                                showWhisperLibPicker = true
                             },
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text("Select Whisper Library")
                         }
 
-                        Button(
-                            onClick = {
-                                /*val fileChooser = FileChooser()
-
-                                // Set extension filter for library files
-                                val extFilter = FileChooser.ExtensionFilter("Library files (*.lib, *.dll, *.so)", "*.lib", "*.dll", "*.so")
-                                fileChooser.extensionFilters.add(extFilter)
-
-                                // Show open file dialog
-                                val file: File? = fileChooser.showOpenDialog(stage)
-
-                                file?.also {
-                                    val whisperLibPath = it.absolutePath
-                                    // Now you can handle the file path as needed
-                                    println("Selected file: $whisperLibPath")
-                                }*/
-                                /*try {
-                                    // Set cross-platform Java L&F (also called "Metal")
-                                    UIManager.setLookAndFeel(
-                                        UIManager.getCrossPlatformLookAndFeelClassName()
-                                    )
-                                } catch (e: UnsupportedLookAndFeelException) {
-                                    e.printStackTrace()
-                                } catch (e: ClassNotFoundException) {
-                                    e.printStackTrace()
-                                } catch (e: InstantiationException) {
-                                    e.printStackTrace()
-                                } catch (e: IllegalAccessException) {
-                                    e.printStackTrace()
-                                }*/
-                                /*SwingUtilities.invokeLater {
-                                    val fileChooser = JFileChooser()
-*//*
-                                    val font = Font("Noto Sans CJK SC", Font.PLAIN, 12)
-                                    fileChooser.font = font*//*
-                                    val font = Font("SansSerif", Font.PLAIN, 12)
-                                    fileChooser.font = font
-                                    // Configure the file chooser if needed
-                                    fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-                                    fileChooser.addChoosableFileFilter(FileNameExtensionFilter("Library files", "lib", "dll", "so"))
-                                    fileChooser.isAcceptAllFileFilterUsed = true
-
-                                    // Open the file chooser dialog
-                                    val result = fileChooser.showOpenDialog(null)
-                                    if (result == JFileChooser.APPROVE_OPTION) {
-                                        // Get the select file's path
-                                        val file = fileChooser.selectedFile
-                                        whisperLibPath = file.absolutePath
-                                        // Now you can handle the file path as needed
-                                        println("Selected file: $whisperLibPath")
-
-                                    }
-                            }*/
-
-                                      },
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text("Select Library")
-                        }
-
                         Text("Model Binary")
                         OutlinedTextField(
-                            value = modelPath,
-                            onValueChange = { modelPath = it },
+                            value = whisperConfig.model,
+                            onValueChange = { whisperConfig.model = it },
                             label = { Text("Model Binary Path") },
                             modifier = Modifier.padding(16.dp).fillMaxWidth()
                         )
-                        Button(
+                        FilledTonalButton(
                             onClick = {
-                                whisperLibPickerLauncher.launch()
+                                showModelPicker = true
                             },
                             modifier = Modifier.padding(16.dp)
                         ) {
@@ -654,23 +577,7 @@ fun RowOptionSwitch(label: String, isChecked: Boolean, onCheckedChange: (Boolean
     }
 }
 
-@Composable
-@Preview
-fun FileChooserButton(onFileChosen: (String) -> Unit) {
-    val fileChooser = remember { JFileChooser() }
-    fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-    fileChooser.addChoosableFileFilter(FileNameExtensionFilter("Image files", "png", "jpg", "jpeg", "gif"))
-    fileChooser.isAcceptAllFileFilterUsed = false
-    val result: Int = fileChooser.showOpenDialog(null)
-    if (result == JFileChooser.APPROVE_OPTION) {
-        val selectedFile = fileChooser.selectedFile
-        onFileChosen(selectedFile.absolutePath)
-    }
-}
-
-
 fun main() = application {
-    //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     Window(
         title = "viewpal",
         icon = painterResource("icon.png"),
