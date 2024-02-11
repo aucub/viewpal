@@ -55,13 +55,13 @@ compose.desktop {
             packageName = "viewpal"
             packageVersion = "1.0.0"
             macOS {
-                iconFile.set(appResourcesRootDir.file("icon.icns"))
+                iconFile.set(project.file("src/main/resources/icon.icns"))
             }
             windows {
-                iconFile.set(appResourcesRootDir.file("icon.ico"))
+                iconFile.set(project.file("src/main/resources/icon.ico"))
             }
             linux {
-                iconFile.set(appResourcesRootDir.file("icon.png"))
+                iconFile.set(project.file("src/main/resources/icon.png"))
             }
         }
     }
