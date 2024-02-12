@@ -3,14 +3,14 @@ name: Gradle
 on:
   workflow_dispatch:
   release:
-    types: [ created ]
+    types: [created]
 
 jobs:
   package:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-13 ]
+        os: [ubuntu-latest, windows-latest, macos-13]
     permissions:
       contents: read
 
@@ -27,7 +27,7 @@ jobs:
           cache: "gradle"
 
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v2.0.0
+        uses: gradle/wrapper-validation-action@v2.1.1
 
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v3.0.0
@@ -35,7 +35,7 @@ jobs:
           gradle-version: current
           arguments: packageDistributionForCurrentOS --warning-mode all
 
-      - uses: actions/upload-artifact@v4.3.0
+      - uses: actions/upload-artifact@v4.3.1
         with:
           name: ${{ matrix.os }}-artifact
           path: build/compose/binaries/main/*
@@ -57,7 +57,7 @@ jobs:
           cache: "gradle"
 
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v2.0.0
+        uses: gradle/wrapper-validation-action@v2.1.1
 
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v3.0.0
@@ -65,7 +65,7 @@ jobs:
           gradle-version: current
           arguments: build
 
-      - uses: actions/upload-artifact@v4.3.0
+      - uses: actions/upload-artifact@v4.3.1
         with:
           name: artifact
           path: |

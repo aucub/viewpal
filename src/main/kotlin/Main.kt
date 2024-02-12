@@ -357,6 +357,7 @@ fun About() {
 
 @Composable
 fun Settings() {
+    var audioDeviceName by remember { mutableStateOf(Config.config.audioConfig.audioDeviceName) }
     var openAiBaseUrl by remember { mutableStateOf(Config.config.openAiConfig.openAiBaseUrl) }
     var openAiApiKey by remember { mutableStateOf(Config.config.openAiConfig.openAiApiKey ?: "") }
     var promptTemplate by remember { mutableStateOf(Config.config.openAiConfig.promptTemplate ?: "") }
@@ -389,6 +390,63 @@ fun Settings() {
                         .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    SettingsSectionTitle(strings.settingsStrings.audioSettingsStrings.audioSettingsTitle)
+                    var audioDeviceExpanded by remember { mutableStateOf(false) }
+                    var audioDeviceSelectedIndex by remember { mutableStateOf(0) }
+                    val audioDeviceList = Audio.getDeviceList()
+                    val audioDeviceInteractionSource = remember { MutableInteractionSource() }
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = (if (audioDeviceName.isNullOrEmpty()) strings.settingsStrings.audioSettingsStrings.audioDeviceDefault else audioDeviceName)!!,
+                            onValueChange = {},
+                            label = {
+                                Text(
+                                    strings.settingsStrings.audioSettingsStrings.audioDevice,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    strings.contentDescriptionStrings.expandDropdownMenu,
+                                    Modifier.clickable { audioDeviceExpanded = true },
+                                    tint = MaterialTheme.colorScheme.onBackground,
+                                )
+                            },
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth().clickable { audioDeviceExpanded = true },
+                        )
+
+                        DropdownMenu(
+                            expanded = audioDeviceExpanded,
+                            onDismissRequest = { audioDeviceExpanded = false },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            audioDeviceList.forEachIndexed { index, audioDevice ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            audioDevice,
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                        )
+                                    },
+                                    onClick = {
+                                        audioDeviceSelectedIndex = index
+                                        audioDeviceName = audioDevice
+                                        audioDeviceExpanded = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    leadingIcon = null,
+                                    trailingIcon = null,
+                                    enabled = true,
+                                    colors = MenuDefaults.itemColors(),
+                                    contentPadding = MenuDefaults.DropdownMenuItemContentPadding,
+                                    interactionSource = audioDeviceInteractionSource,
+                                )
+                            }
+                        }
+                    }
                     SettingsSectionTitle(strings.settingsStrings.openAiSettingsStrings.openAiSettingsTitle)
                     SettingsTextField(
                         value = openAiBaseUrl,
@@ -675,6 +733,7 @@ fun Settings() {
                     FilledTonalButton(
                         onClick = {
                             Config.config.apply {
+                                audioConfig.audioDeviceName = audioDeviceName
                                 openAiConfig.openAiBaseUrl = openAiBaseUrl
                                 openAiConfig.openAiApiKey = openAiApiKey.takeIf { it.isNotEmpty() }
                                 openAiConfig.promptTemplate = promptTemplate.takeIf { it.isNotEmpty() }

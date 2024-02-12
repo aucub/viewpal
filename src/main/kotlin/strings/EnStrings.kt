@@ -12,6 +12,12 @@ internal val EnStrings =
         SettingsStrings(
             saveSettings = "Save Settings",
             resetSettings = "Reset Settings",
+            audioSettingsStrings =
+            AudioSettingsStrings(
+                audioSettingsTitle = "Audio Config",
+                audioDevice = "Audio Device",
+                audioDeviceDefault = "Default Device",
+            ),
             openAiSettingsStrings =
             OpenAiSettingsStrings(
                 openAiSettingsTitle = "OpenAI Config",
