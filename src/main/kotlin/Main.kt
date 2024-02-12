@@ -96,11 +96,11 @@ fun App() {
                 )
             },
             gestureSettleConfig =
-                GestureSettleConfig(
-                    completionThreshold = 0.2f,
-                    completeGestureSpec = spring(),
-                    revertGestureSpec = spring(),
-                ),
+            GestureSettleConfig(
+                completionThreshold = 0.2f,
+                completeGestureSpec = spring(),
+                revertGestureSpec = spring(),
+            ),
         )
     val actions =
         mapOf(
@@ -167,16 +167,16 @@ fun App() {
         ) { innerPadding ->
             Column(
                 modifier =
-                    Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
                 Card(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
@@ -191,16 +191,16 @@ fun App() {
                     screenWidthPx = (LocalWindowInfo.current.containerSize.width * LocalDensity.current.density).roundToInt(),
                     screenHeightPx = (LocalWindowInfo.current.containerSize.height * LocalDensity.current.density).roundToInt(),
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                 ) {
                     Column(Modifier.fillMaxSize()) {
                         Card(
                             modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             Text(
@@ -212,9 +212,9 @@ fun App() {
                         }
                         Card(
                             modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 32.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 32.dp),
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             Text(
@@ -228,17 +228,17 @@ fun App() {
                 }
                 Row(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     actions.keys.forEachIndexed { index, key ->
                         FilledTonalButton(
                             onClick = { actions.getValue(key).invoke() },
                             modifier =
-                                Modifier
-                                    .padding(horizontal = 8.dp),
+                            Modifier
+                                .padding(horizontal = 8.dp),
                         ) {
                             Text(
                                 key,
@@ -252,9 +252,9 @@ fun App() {
                 }
                 Row(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     when (state) {
@@ -266,8 +266,8 @@ fun App() {
                                     }
                                 },
                                 modifier =
-                                    Modifier
-                                        .padding(start = 16.dp),
+                                Modifier
+                                    .padding(start = 16.dp),
                             ) {
                                 Icon(Icons.Default.Add, strings.contentDescriptionStrings.startNewSession)
                             }
@@ -292,31 +292,31 @@ fun App() {
                         },
                         modifier = Modifier.padding(end = 16.dp),
                         containerColor =
-                            when (state) {
-                                State.Capturing -> {
-                                    capturingButtonColor
-                                }
+                        when (state) {
+                            State.Capturing -> {
+                                capturingButtonColor
+                            }
 
-                                else -> captureButtonColor
-                            },
+                            else -> captureButtonColor
+                        },
                     ) {
                         Icon(
                             imageVector =
-                                when (state) {
-                                    State.Capturing -> {
-                                        Icons.Default.Pause
-                                    }
+                            when (state) {
+                                State.Capturing -> {
+                                    Icons.Default.Pause
+                                }
 
-                                    else -> Icons.Default.PlayArrow
-                                },
+                                else -> Icons.Default.PlayArrow
+                            },
                             contentDescription =
-                                when (state) {
-                                    State.Capturing -> {
-                                        strings.contentDescriptionStrings.pause
-                                    }
+                            when (state) {
+                                State.Capturing -> {
+                                    strings.contentDescriptionStrings.pause
+                                }
 
-                                    else -> strings.contentDescriptionStrings.capture
-                                },
+                                else -> strings.contentDescriptionStrings.capture
+                            },
                         )
                     }
                 }
@@ -360,10 +360,10 @@ fun Settings() {
                 val scrollState = rememberScrollState()
                 Column(
                     modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .verticalScroll(scrollState),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text(
@@ -597,7 +597,7 @@ fun Settings() {
                     // 翻译功能开关
                     RowOptionSwitch(
                         label =
-                            strings.settingsStrings.whisperSettingsStrings.translate,
+                        strings.settingsStrings.whisperSettingsStrings.translate,
                         isChecked = whisperConfig.translate,
                         onCheckedChange = { whisperConfig.translate = it },
                     )
@@ -728,9 +728,9 @@ fun RowOptionSwitch(
 ) {
     Row(
         modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
     ) {
         Text(
             text = label,
@@ -749,10 +749,10 @@ fun PreferableDialog(onDismissRequest: () -> Unit) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(16.dp),
+            Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             PreferableMaterialTheme { // provides composition locals

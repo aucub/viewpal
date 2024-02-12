@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.File
 import java.nio.file.Paths
 import kotlin.math.max
 import kotlin.math.min
@@ -76,6 +77,9 @@ class WhisperRecognizer {
                 System.err.println("警告：模型不是多语言的，忽略语言和翻译选项")
             }
         }
+        val grammar = whisper.parseGrammar(File("src/main/resources/view-zh.gbnf").readText())
+        whisperFullParams.grammar = grammar
+        whisperFullParams.grammarPenalty = 100f
     }
 
     fun startRecognition() =
