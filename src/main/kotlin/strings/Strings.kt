@@ -12,8 +12,15 @@ internal data class Strings(
 internal data class SettingsStrings(
     val saveSettings: String,
     val resetSettings: String,
+    val audioSettingsStrings: AudioSettingsStrings,
     val openAiSettingsStrings: OpenAiSettingsStrings,
     val whisperSettingsStrings: WhisperSettingsStrings,
+)
+
+internal data class AudioSettingsStrings(
+    val audioSettingsTitle: String,
+    val audioDevice: String,
+    val audioDeviceDefault: String,
 )
 
 internal data class OpenAiSettingsStrings(

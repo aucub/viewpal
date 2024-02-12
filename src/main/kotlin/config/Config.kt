@@ -10,15 +10,15 @@ class Config {
         var config: Config = ConfigManager.getConfig()
     }
 
-    fun deepCopy(): Config {
-        var copiedConfig = Config()
-        copiedConfig.openAiConfig = this.openAiConfig.deepCopy()
-        copiedConfig.whisperConfig = this.whisperConfig.deepCopy()
-        return copiedConfig
-    }
-
+    var audioConfig: AudioConfig = AudioConfig()
     var openAiConfig: OpenAiConfig = OpenAiConfig()
     var whisperConfig: WhisperConfig = WhisperConfig()
+}
+
+class AudioConfig : RealmObject {
+    @PrimaryKey
+    var id: ObjectId = ObjectId()
+    var audioDeviceName: String? = null
 }
 
 class OpenAiConfig : RealmObject {
@@ -87,45 +87,4 @@ class WhisperConfig : RealmObject {
     var whisperLib: String = "/usr/lib/libwhisper.so"
 
     var model: String = "/usr/share/whisper.cpp-model-base/base.bin"
-}
-
-fun OpenAiConfig.deepCopy(): OpenAiConfig {
-    var copy = OpenAiConfig()
-    copy.id = this.id
-    copy.openAiBaseUrl = this.openAiBaseUrl
-    copy.openAiApiKey = this.openAiApiKey
-    copy.promptTemplate = this.promptTemplate
-    copy.maxTokens = this.maxTokens
-    copy.temperature = this.temperature
-    copy.preferredModel = this.preferredModel
-    copy.topic = this.topic
-    return copy
-}
-
-fun WhisperConfig.deepCopy(): WhisperConfig {
-    var copy = WhisperConfig()
-    copy.id = this.id
-    copy.sampleRate = this.sampleRate
-    copy.sampleSizeInBits = this.sampleSizeInBits
-    copy.nThreads = this.nThreads
-    copy.stepMs = this.stepMs
-    copy.lengthMs = this.lengthMs
-    copy.keepMs = this.keepMs
-    copy.delayMs = this.delayMs
-    copy.translate = this.translate
-    copy.detectLanguage = this.detectLanguage
-    copy.noTimestamps = this.noTimestamps
-    copy.language = this.language
-    copy.printSpecial = this.printSpecial
-    copy.audioCtx = this.audioCtx
-    copy.speedUp = this.speedUp
-    copy.noFallback = this.noFallback
-    copy.vadThold = this.vadThold
-    copy.freqThold = this.freqThold
-    copy.initialPrompt = this.initialPrompt
-    copy.noContext = this.noContext
-    copy.useGPU = this.useGPU
-    copy.whisperLib = this.whisperLib
-    copy.model = this.model
-    return copy
 }

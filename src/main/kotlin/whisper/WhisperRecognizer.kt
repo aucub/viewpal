@@ -3,6 +3,7 @@ package whisper
 import Singleton
 import config.Config
 import io.github.givimad.whisperjni.*
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,6 +16,7 @@ import kotlin.random.Random
 
 class WhisperRecognizer {
     companion object {
+        private val logger = KotlinLogging.logger {}
         private val job = Job()
         val scope = CoroutineScope(Dispatchers.Default + job)
         val nThreads = minOf(Config.config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
@@ -64,7 +66,7 @@ class WhisperRecognizer {
             if (Config.config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
         val loadOptions =
             WhisperJNI.LoadOptions().apply {
-                logger = WhisperJNI.LibraryLogger { println(it) }
+                logger = WhisperJNI.LibraryLogger { logger.log(it) }
                 whisperLib = Paths.get(Config.config.whisperConfig.whisperLib)
             }
         WhisperJNI.loadLibrary(loadOptions)
@@ -76,7 +78,7 @@ class WhisperRecognizer {
         if (!whisper.isMultilingual(whisperContext)) {
             if (Config.config.whisperConfig.translate) {
                 Config.config.whisperConfig.translate = false
-                System.err.println("警告：模型不是多语言的，忽略语言和翻译选项")
+                logger.warn { "警告：模型不是多语言的，忽略语言和翻译选项" }
             }
         }
         val grammar = whisper.parseGrammar(File("src/main/resources/view-zh.gbnf").readText())
@@ -89,9 +91,6 @@ class WhisperRecognizer {
             isRunning = true
             var nIter = 0
             while (isRunning) {
-                if (!isRunning) {
-                    break
-                }
                 val samplesArray = Singleton.audio.get()
                 if (samplesArray == null) {
                     Thread.sleep(Config.config.whisperConfig.delayMs * Random.nextInt(1, 11))
@@ -128,7 +127,7 @@ class WhisperRecognizer {
                     }
                 }
                 if (whisper.full(whisperContext, whisperFullParams, samples, samples.size) != 0) {
-                    println("音频处理失败")
+                    logger.error { "音频处理失败" }
                     return@launch
                 }
                 val nSegments = whisper.fullNSegments(whisperContext)

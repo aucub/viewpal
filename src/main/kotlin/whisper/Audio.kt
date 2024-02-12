@@ -1,6 +1,7 @@
 package whisper
 
 import config.Config
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -17,6 +18,7 @@ import kotlin.concurrent.withLock
 
 class Audio {
     companion object {
+        private val logger = KotlinLogging.logger {}
         private val scope =
             CoroutineScope(
                 Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
@@ -35,24 +37,27 @@ class Audio {
         private var isCapturing: Boolean = false
         private val audioQueue: Queue<FloatArray> = LinkedList()
         private val audioQueueLock = ReentrantLock()
+
+        fun getDeviceList(): List<String> {
+            val mixerInfoArray = AudioSystem.getMixerInfo()
+            val deviceList = mutableListOf<String>()
+            for (mixInfo in mixerInfoArray) {
+                deviceList.add(mixInfo.name)
+            }
+            return deviceList
+        }
     }
 
     init {
         val dataLineInfo = DataLine.Info(TargetDataLine::class.java, audioFormat)
         targetDataLine = AudioSystem.getLine(dataLineInfo) as TargetDataLine
         targetDataLine.open(audioFormat, (mSampleRate * mLenMs / 1000).toInt())
-    }
-
-    fun getDeviceList(): List<String> {
-        val mixerInfoArray = AudioSystem.getMixerInfo()
-        val deviceList = mutableListOf<String>()
-        for (mixInfo in mixerInfoArray) {
-            deviceList.add(mixInfo.name)
+        if (!Config.config.audioConfig.audioDeviceName.isNullOrEmpty()) {
+            init(Config.config.audioConfig.audioDeviceName!!)
         }
-        return deviceList
     }
 
-    fun init(deviceName: String): Boolean {
+    private fun init(deviceName: String): Boolean {
         val mixerInfoArray = AudioSystem.getMixerInfo()
         for (mixInfo in mixerInfoArray) {
             if (mixInfo.name.contains(deviceName)) {
@@ -75,7 +80,7 @@ class Audio {
             targetDataLine.start()
             return true
         } else {
-            println("Already capturing!")
+            logger.warn { "Already capturing!" }
             return false
         }
     }
@@ -107,7 +112,7 @@ class Audio {
 
     private fun readSamples(ms: Int): FloatArray? {
         if (!isCapturing) {
-            println("Not capturing!")
+            logger.warn { "Not capturing!" }
             return null
         }
         var msLocal = ms
@@ -137,7 +142,7 @@ class Audio {
 
     fun clear(): Boolean {
         if (!isCapturing) {
-            println("Not capturing!")
+            logger.warn { "Not capturing!" }
             return false
         }
         targetDataLine.close()
@@ -149,7 +154,7 @@ class Audio {
 
     fun pause(): Boolean {
         if (!isCapturing) {
-            println("Already paused!")
+            logger.warn { "Already paused!" }
             return false
         }
         isCapturing = false
