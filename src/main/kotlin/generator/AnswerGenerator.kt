@@ -15,6 +15,7 @@ class AnswerGenerator {
                 .tokenizer(tokenizer).temperature(Config.config.temperature).apiKey(Config.config.openAiApiKey)
                 .baseUrl(Config.config.openAiBaseUrl).build()
         private var chatMemory = TokenWindowChatMemory.withMaxTokens(Config.config.maxTokens, tokenizer)
+
         fun generateAnswer(prompt: String): String {
             chatMemory.add(UserMessage.from(prompt))
             return model.generate(chatMemory.messages()).content().text()

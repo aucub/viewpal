@@ -15,21 +15,22 @@ import javax.sound.sampled.DataLine
 import javax.sound.sampled.TargetDataLine
 import kotlin.concurrent.withLock
 
-
 class Audio {
     companion object {
-        private val scope = CoroutineScope(
-            Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        )
+        private val scope =
+            CoroutineScope(
+                Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+            )
         private var mLenMs = Config.whisperConfig.lengthMs
         private var mSampleRate = Config.whisperConfig.sampleRate
-        private var audioFormat: AudioFormat = AudioFormat(
-            mSampleRate,
-            Config.whisperConfig.sampleSizeInBits,
-            1,
-            true,
-            false
-        )
+        private var audioFormat: AudioFormat =
+            AudioFormat(
+                mSampleRate,
+                Config.whisperConfig.sampleSizeInBits,
+                1,
+                true,
+                false,
+            )
         private lateinit var targetDataLine: TargetDataLine
         private var isCapturing: Boolean = false
         private val audioQueue: Queue<FloatArray> = LinkedList()
@@ -79,19 +80,20 @@ class Audio {
         }
     }
 
-    fun start() = scope.launch {
-        targetDataLine.start()
-        isCapturing = true
-        while (isCapturing) {
-            val samples = readSamples(mLenMs)
-            if (samples != null) {
-                audioQueueLock.withLock {
-                    audioQueue.add(samples)
+    fun start() =
+        scope.launch {
+            targetDataLine.start()
+            isCapturing = true
+            while (isCapturing) {
+                val samples = readSamples(mLenMs)
+                if (samples != null) {
+                    audioQueueLock.withLock {
+                        audioQueue.add(samples)
+                    }
                 }
+                Thread.sleep(Config.whisperConfig.delayMs)
             }
-            Thread.sleep(Config.whisperConfig.delayMs)
         }
-    }
 
     fun get(): FloatArray? {
         audioQueueLock.withLock {
@@ -121,13 +123,16 @@ class Audio {
             val samples = FloatArray(captureBuffer.capacity() / 2)
             var i = 0
             while (shortBuffer.hasRemaining()) {
-                samples[i++] = java.lang.Float.max(
-                    -1f,
-                    java.lang.Float.min((shortBuffer.get().toFloat()) / Short.MAX_VALUE.toFloat(), 1f)
-                )
+                samples[i++] =
+                    java.lang.Float.max(
+                        -1f,
+                        java.lang.Float.min((shortBuffer.get().toFloat()) / Short.MAX_VALUE.toFloat(), 1f),
+                    )
             }
             return samples
-        } else return null
+        } else {
+            return null
+        }
     }
 
     fun clear(): Boolean {

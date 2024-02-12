@@ -59,10 +59,11 @@ class WhisperRecognizer {
         whisperFullParams.initialPrompt = Config.whisperConfig.initialPrompt
         whisperFullParams.temperatureInc =
             if (Config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
-        val loadOptions = WhisperJNI.LoadOptions().apply {
-            logger = WhisperJNI.LibraryLogger { println(it) }
-            whisperLib = Paths.get(Config.whisperConfig.whisperLib)
-        }
+        val loadOptions =
+            WhisperJNI.LoadOptions().apply {
+                logger = WhisperJNI.LibraryLogger { println(it) }
+                whisperLib = Paths.get(Config.whisperConfig.whisperLib)
+            }
         WhisperJNI.loadLibrary(loadOptions)
         WhisperJNI.setLibraryLogger(null)
         whisper = WhisperJNI()
@@ -77,77 +78,85 @@ class WhisperRecognizer {
         }
     }
 
-    fun startRecognition() = scope.launch {
-        isRunning = true
-        var nIter = 0
-        while (isRunning) {
-            if (!isRunning) {
-                break
-            }
-            var samplesArray = Singleton.audio.get()
-            if (samplesArray == null) {
-                Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
-                continue
-            }
-            samplesNew = samplesArray.toMutableList()
-            tLast = (tLast + samplesNew.size / Config.whisperConfig.sampleRate * 2).toInt()
-            if (!useVad) {
-                val nSamplesNew = samplesNew.size
-                val nSamplesTake = min(samplesOld.size, max(0, (nSamplesKeep + nSamplesLen - nSamplesNew).toInt()))
-                samples = FloatArray(nSamplesNew + nSamplesTake)
-                for (i in 0 until nSamplesTake) {
-                    samples[i] = samplesOld[samplesOld.size - nSamplesTake + i]
+    fun startRecognition() =
+        scope.launch {
+            isRunning = true
+            var nIter = 0
+            while (isRunning) {
+                if (!isRunning) {
+                    break
                 }
-                for (i in 0 until nSamplesNew) {
-                    samples[nSamplesTake + i] = samplesNew[i]
-                }
-                samplesOld = samples.toMutableList()
-                tFirst = (tLast - (nSamplesNew + nSamplesTake) / Config.whisperConfig.sampleRate * 2).toInt()
-            } else {
-                if (vadSimple(
-                        samplesNew.toFloatArray(), Config.whisperConfig.sampleRate,
-                        1000, Config.whisperConfig.vadThold, Config.whisperConfig.freqThold
-                    )
-                ) {
-                    samples = samplesArray
-                    tFirst = (tLast - samples.size / Config.whisperConfig.sampleRate * 2).toInt()
-                } else {
+                val samplesArray = Singleton.audio.get()
+                if (samplesArray == null) {
                     Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
                     continue
                 }
-            }
-            if (whisper.full(whisperContext, whisperFullParams, samples, samples.size) != 0) {
-                println("音频处理失败")
-                return@launch
-            }
-            val nSegments = whisper.fullNSegments(whisperContext)
-            if (nSegments > 0) {
-                for (i in 0 until nSegments) {
-                    val text = whisper.fullGetSegmentText(whisperContext, i)
-                    if (whisperFullParams.noTimestamps) {
-                        Segment.add(Segment(text, tFirst, tLast))
+                samplesNew = samplesArray.toMutableList()
+                tLast = (tLast + samplesNew.size / Config.whisperConfig.sampleRate * 2).toInt()
+                if (!useVad) {
+                    val nSamplesNew = samplesNew.size
+                    val nSamplesTake = min(samplesOld.size, max(0, (nSamplesKeep + nSamplesLen - nSamplesNew).toInt()))
+                    samples = FloatArray(nSamplesNew + nSamplesTake)
+                    for (i in 0 until nSamplesTake) {
+                        samples[i] = samplesOld[samplesOld.size - nSamplesTake + i]
+                    }
+                    for (i in 0 until nSamplesNew) {
+                        samples[nSamplesTake + i] = samplesNew[i]
+                    }
+                    samplesOld = samples.toMutableList()
+                    tFirst = (tLast - (nSamplesNew + nSamplesTake) / Config.whisperConfig.sampleRate * 2).toInt()
+                } else {
+                    if (vadSimple(
+                            samplesNew.toFloatArray(),
+                            Config.whisperConfig.sampleRate,
+                            1000,
+                            Config.whisperConfig.vadThold,
+                            Config.whisperConfig.freqThold,
+                        )
+                    ) {
+                        samples = samplesArray
+                        tFirst = (tLast - samples.size / Config.whisperConfig.sampleRate * 2).toInt()
                     } else {
-                        val t0 = whisper.fullGetSegmentTimestamp0(whisperContext, i) / 100
-                        val t1 = whisper.fullGetSegmentTimestamp1(whisperContext, i) / 100
-                        Segment.add(Segment(text, (tFirst + t0).toInt(), (tFirst + t1).toInt()))
+                        Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
+                        continue
                     }
                 }
-            }
-            nIter++
-            if (!useVad && (nIter % nNewLine) == 0) {
-                samplesOld = samples.takeLast(nSamplesKeep.toInt()).toMutableList()
-                if (!Config.whisperConfig.noContext) {
+                if (whisper.full(whisperContext, whisperFullParams, samples, samples.size) != 0) {
+                    println("音频处理失败")
+                    return@launch
+                }
+                val nSegments = whisper.fullNSegments(whisperContext)
+                if (nSegments > 0) {
                     for (i in 0 until nSegments) {
                         val text = whisper.fullGetSegmentText(whisperContext, i)
-                        promptTokens += text
+                        if (whisperFullParams.noTimestamps) {
+                            Segment.add(Segment(text, tFirst, tLast))
+                        } else {
+                            val t0 = whisper.fullGetSegmentTimestamp0(whisperContext, i) / 100
+                            val t1 = whisper.fullGetSegmentTimestamp1(whisperContext, i) / 100
+                            Segment.add(Segment(text, (tFirst + t0).toInt(), (tFirst + t1).toInt()))
+                        }
                     }
                 }
+                nIter++
+                if (!useVad && (nIter % nNewLine) == 0) {
+                    samplesOld = samples.takeLast(nSamplesKeep.toInt()).toMutableList()
+                    if (!Config.whisperConfig.noContext) {
+                        for (i in 0 until nSegments) {
+                            val text = whisper.fullGetSegmentText(whisperContext, i)
+                            promptTokens += text
+                        }
+                    }
+                }
+                Thread.sleep(Config.whisperConfig.delayMs)
             }
-            Thread.sleep(Config.whisperConfig.delayMs)
         }
-    }
 
-    private fun highPassFilter(data: FloatArray, cutoff: Float, sampleRate: Float) {
+    private fun highPassFilter(
+        data: FloatArray,
+        cutoff: Float,
+        sampleRate: Float,
+    ) {
         val rc = 1.0f / (2.0f * Math.PI.toFloat() * cutoff)
         val dt = 1.0f / sampleRate
         val alpha = dt / (rc + dt)
@@ -160,13 +169,12 @@ class WhisperRecognizer {
         }
     }
 
-
     private fun vadSimple(
         samples: FloatArray,
         sampleRate: Float,
         lastMs: Int,
         vadThold: Float,
-        freqThold: Float
+        freqThold: Float,
     ): Boolean {
         val nSamples = samples.size
         val nSamplesLast = (sampleRate * lastMs) / 1000
@@ -201,6 +209,4 @@ class WhisperRecognizer {
         isRunning = false
         return true
     }
-
-
 }

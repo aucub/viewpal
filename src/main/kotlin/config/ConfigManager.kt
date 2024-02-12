@@ -8,6 +8,7 @@ import io.realm.kotlin.query.RealmResults
 class ConfigManager {
     private val config = RealmConfiguration.create(schema = setOf(Config::class))
     private val realm: Realm = Realm.open(config)
+
     fun saveConfig(config: Config) {
         realm.writeBlocking {
             copyToRealm(config)

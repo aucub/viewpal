@@ -8,7 +8,6 @@ import whisper.Segment
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StateMachine(initialState: State = State.Idle) : FlowReduxStateMachine<State, Event>(initialState) {
-
     private val logger = KotlinLogging.logger {}
 
     init {

@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.compose")
     id("io.realm.kotlin") version "1.13.0"
     id("com.mikepenz.aboutlibraries.plugin") version "11.1.0-b01"
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17"
 }
 
 group = "com.pal"
@@ -39,7 +40,13 @@ dependencies {
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")
     implementation("com.darkrockstudios:mpfilepicker-jvm:3.1.0")
     implementation("io.github.softartdev:theme-material3:0.6.3")
+    implementation("cafe.adriel.lyricist:lyricist:1.6.2-1.8.20")
+    ksp("cafe.adriel.lyricist:lyricist-processor:1.6.2-1.8.20")
+}
 
+ksp {
+    arg("lyricist.internalVisibility", "true")
+    arg("lyricist.generateStringsProperty", "true")
 }
 
 compose.desktop {
@@ -50,7 +57,7 @@ compose.desktop {
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
-                TargetFormat.Deb
+                TargetFormat.Deb,
             )
             packageName = "viewpal"
             packageVersion = "1.0.0"

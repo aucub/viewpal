@@ -6,7 +6,6 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
 class Config : RealmObject {
-
     companion object {
         var config: Config = Config()
         var whisperConfig: WhisperConfig = WhisperConfig()
@@ -30,7 +29,6 @@ class Config : RealmObject {
     var topic: String? = null
 
     class WhisperConfig : RealmObject {
-
         var sampleRate: Float = 16000F
 
         var sampleSizeInBits: Int = 16
@@ -75,5 +73,4 @@ class Config : RealmObject {
 
         var model: String = "/usr/share/whisper.cpp-model-base/base.bin"
     }
-
 }
