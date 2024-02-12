@@ -10,6 +10,8 @@ internal data class Strings(
 )
 
 internal data class SettingsStrings(
+    val saveSettings: String,
+    val resetSettings: String,
     val openAiSettingsStrings: OpenAiSettingsStrings,
     val whisperSettingsStrings: WhisperSettingsStrings,
 )

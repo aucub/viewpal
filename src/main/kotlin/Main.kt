@@ -47,7 +47,7 @@ import com.softartdev.theme.material3.SettingsScaffold
 import com.softartdev.theme.material3.ThemePreferenceItem
 import com.softartdev.theme.material3.ThemePreferencesCategory
 import config.Config
-import config.Config.Companion.whisperConfig
+import config.ConfigManager
 import dev.langchain4j.model.openai.OpenAiChatModelName
 import kotlinx.coroutines.launch
 import state.Event
@@ -66,7 +66,7 @@ object Singleton {
     val statemachine = StateMachine()
     var showAboutWindow by mutableStateOf(false)
     var showSettingsWindow by mutableStateOf(false)
-    var showPreferableDialog by mutableStateOf(false)
+    var showPreferableMaterialThemeDialog by mutableStateOf(false)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -130,7 +130,7 @@ fun App() {
                     actions = {
                         IconButton(
                             onClick = {
-                                Singleton.showPreferableDialog = true
+                                Singleton.showPreferableMaterialThemeDialog = true
                             },
                         ) {
                             Icon(
@@ -336,6 +336,9 @@ fun About() {
                     TopAppBar(title = {
                         Text(
                             strings.aboutTitle,
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     })
@@ -354,6 +357,26 @@ fun About() {
 
 @Composable
 fun Settings() {
+    var openAiBaseUrl by remember { mutableStateOf(Config.config.openAiConfig.openAiBaseUrl) }
+    var openAiApiKey by remember { mutableStateOf(Config.config.openAiConfig.openAiApiKey ?: "") }
+    var promptTemplate by remember { mutableStateOf(Config.config.openAiConfig.promptTemplate ?: "") }
+    var maxTokens by remember { mutableStateOf(Config.config.openAiConfig.maxTokens) }
+    var temperature by remember { mutableStateOf(Config.config.openAiConfig.temperature) }
+    var preferredModel by remember { mutableStateOf(Config.config.openAiConfig.preferredModel) }
+    var topic by remember { mutableStateOf(Config.config.openAiConfig.topic ?: "") }
+    var nThreads by remember { mutableStateOf(Config.config.whisperConfig.nThreads) }
+    var stepMs by remember { mutableStateOf(Config.config.whisperConfig.stepMs) }
+    var lengthMs by remember { mutableStateOf(Config.config.whisperConfig.lengthMs) }
+    var keepMs by remember { mutableStateOf(Config.config.whisperConfig.keepMs) }
+    var delayMs by remember { mutableStateOf(Config.config.whisperConfig.delayMs) }
+    var translate by remember { mutableStateOf(Config.config.whisperConfig.translate) }
+    var detectLanguage by remember { mutableStateOf(Config.config.whisperConfig.detectLanguage) }
+    var language by remember { mutableStateOf(Config.config.whisperConfig.language) }
+    var initialPrompt by remember { mutableStateOf(Config.config.whisperConfig.initialPrompt ?: "") }
+    var noContext by remember { mutableStateOf(Config.config.whisperConfig.noContext) }
+    var useGPU by remember { mutableStateOf(Config.config.whisperConfig.useGPU) }
+    var whisperLib by remember { mutableStateOf(Config.config.whisperConfig.whisperLib) }
+    var model by remember { mutableStateOf(Config.config.whisperConfig.model) }
     Window(title = strings.settingsTitle, onCloseRequest = { Singleton.showSettingsWindow = false }) {
         PreferableMaterialTheme {
             Scaffold { _ ->
@@ -366,50 +389,26 @@ fun Settings() {
                         .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        strings.settingsStrings.openAiSettingsStrings.openAiSettingsTitle,
-                        modifier = Modifier.padding(vertical = 10.dp),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
+                    SettingsSectionTitle(strings.settingsStrings.openAiSettingsStrings.openAiSettingsTitle)
+                    SettingsTextField(
+                        value = openAiBaseUrl,
+                        label = strings.settingsStrings.openAiSettingsStrings.openAiBaseUrl,
+                        onValueChange = { openAiBaseUrl = it },
                     )
-                    // OpenAI基础URL
-                    TextField(
-                        value = Config.config.openAiBaseUrl,
-                        onValueChange = { Config.config.openAiBaseUrl = it },
-                        label = {
-                            Text(
-                                strings.settingsStrings.openAiSettingsStrings.openAiBaseUrl,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
+                    SettingsTextField(
+                        value = openAiApiKey,
+                        label = strings.settingsStrings.openAiSettingsStrings.openAiApiKey,
+                        onValueChange = { openAiApiKey = it },
                     )
-                    // OpenAI API密钥
-                    TextField(
-                        value = Config.config.openAiApiKey ?: "",
-                        onValueChange = { Config.config.openAiApiKey = it },
-                        label = {
-                            Text(
-                                strings.settingsStrings.openAiSettingsStrings.openAiApiKey,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
-                    )
-                    // 提示模板
-                    TextField(
-                        value = Config.config.promptTemplate ?: "",
-                        onValueChange = { Config.config.promptTemplate = it },
-                        label = {
-                            Text(
-                                strings.settingsStrings.openAiSettingsStrings.promptTemplate,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
+                    SettingsTextField(
+                        value = promptTemplate,
+                        label = strings.settingsStrings.openAiSettingsStrings.promptTemplate,
+                        onValueChange = { promptTemplate = it },
                     )
                     // 最大令牌数
                     TextField(
-                        value = Config.config.maxTokens.toString(),
-                        onValueChange = { Config.config.maxTokens = it.toIntOrNull() ?: Config.config.maxTokens },
+                        value = maxTokens.toString(),
+                        onValueChange = { maxTokens = it.toIntOrNull() ?: maxTokens },
                         label = {
                             Text(
                                 strings.settingsStrings.openAiSettingsStrings.maxTokens,
@@ -417,17 +416,14 @@ fun Settings() {
                             )
                         },
                     )
-                    var temperature by remember { mutableStateOf(Config.config.temperature) }
                     val temperatureRange = 0.0..1.0
                     val step = 0.1
-
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             strings.settingsStrings.openAiSettingsStrings.temperature,
                             modifier = Modifier.width(160.dp),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
-
                         // 减号按钮
                         FilledTonalButton(
                             onClick = { if (temperature - step >= temperatureRange.start) temperature -= step },
@@ -458,11 +454,6 @@ fun Settings() {
                         }
                     }
 
-                    // 监听temperature变化并更新到Config当中
-                    LaunchedEffect(temperature) {
-                        Config.config.temperature = temperature
-                    }
-
                     var expanded by remember { mutableStateOf(false) }
                     var selectedIndex by remember { mutableStateOf(0) }
                     val models = OpenAiChatModelName.entries.toTypedArray()
@@ -470,8 +461,8 @@ fun Settings() {
 
                     Column(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
-                            value = models[selectedIndex].name,
-                            onValueChange = { },
+                            value = preferredModel,
+                            onValueChange = {},
                             label = {
                                 Text(
                                     strings.settingsStrings.openAiSettingsStrings.preferredModel,
@@ -480,7 +471,7 @@ fun Settings() {
                             },
                             trailingIcon = {
                                 Icon(
-                                    Icons.Filled.ArrowDropDown,
+                                    Icons.Default.ArrowDropDown,
                                     strings.contentDescriptionStrings.expandDropdownMenu,
                                     Modifier.clickable { expanded = true },
                                     tint = MaterialTheme.colorScheme.onBackground,
@@ -505,7 +496,7 @@ fun Settings() {
                                     },
                                     onClick = {
                                         selectedIndex = index
-                                        Config.config.preferredModel = model.name
+                                        preferredModel = model.name
                                         expanded = false
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -519,29 +510,16 @@ fun Settings() {
                             }
                         }
                     }
-                    // 主题
-                    TextField(
-                        value = Config.config.topic ?: "",
-                        onValueChange = { Config.config.topic = it },
-                        label = {
-                            Text(
-                                strings.settingsStrings.openAiSettingsStrings.topic,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
+                    SettingsTextField(
+                        value = topic,
+                        label = strings.settingsStrings.openAiSettingsStrings.topic,
+                        onValueChange = { topic = it },
                     )
-                    // Whisper设置的标题
-                    Text(
-                        strings.settingsStrings.whisperSettingsStrings.whisperSettingsTitle,
-                        modifier = Modifier.padding(vertical = 10.dp),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
+                    SettingsSectionTitle(strings.settingsStrings.whisperSettingsStrings.whisperSettingsTitle)
                     // 线程数
                     TextField(
-                        value = whisperConfig.nThreads.toString(),
-                        onValueChange = { whisperConfig.nThreads = it.toIntOrNull() ?: whisperConfig.nThreads },
+                        value = nThreads.toString(),
+                        onValueChange = { nThreads = it.toIntOrNull() ?: nThreads },
                         label = {
                             Text(
                                 strings.settingsStrings.whisperSettingsStrings.nThreads,
@@ -551,8 +529,8 @@ fun Settings() {
                     )
                     // Step MS
                     TextField(
-                        value = whisperConfig.stepMs.toString(),
-                        onValueChange = { whisperConfig.stepMs = it.toIntOrNull() ?: whisperConfig.stepMs },
+                        value = stepMs.toString(),
+                        onValueChange = { stepMs = it.toIntOrNull() ?: stepMs },
                         label = {
                             Text(
                                 strings.settingsStrings.whisperSettingsStrings.stepMs,
@@ -563,8 +541,8 @@ fun Settings() {
 
                     // Length MS
                     TextField(
-                        value = whisperConfig.lengthMs.toString(),
-                        onValueChange = { whisperConfig.lengthMs = it.toIntOrNull() ?: whisperConfig.lengthMs },
+                        value = lengthMs.toString(),
+                        onValueChange = { lengthMs = it.toIntOrNull() ?: lengthMs },
                         label = {
                             Text(
                                 strings.settingsStrings.whisperSettingsStrings.lengthMs,
@@ -574,8 +552,8 @@ fun Settings() {
                     )
 
                     TextField(
-                        value = whisperConfig.keepMs.toString(),
-                        onValueChange = { whisperConfig.keepMs = it.toIntOrNull() ?: whisperConfig.keepMs },
+                        value = keepMs.toString(),
+                        onValueChange = { keepMs = it.toIntOrNull() ?: keepMs },
                         label = {
                             Text(
                                 strings.settingsStrings.whisperSettingsStrings.keepMs,
@@ -585,8 +563,8 @@ fun Settings() {
                     )
 
                     TextField(
-                        value = whisperConfig.delayMs.toString(),
-                        onValueChange = { whisperConfig.delayMs = it.toLongOrNull() ?: whisperConfig.delayMs },
+                        value = delayMs.toString(),
+                        onValueChange = { delayMs = it.toLongOrNull() ?: delayMs },
                         label = {
                             Text(
                                 strings.settingsStrings.whisperSettingsStrings.delayMs,
@@ -598,64 +576,54 @@ fun Settings() {
                     RowOptionSwitch(
                         label =
                         strings.settingsStrings.whisperSettingsStrings.translate,
-                        isChecked = whisperConfig.translate,
-                        onCheckedChange = { whisperConfig.translate = it },
+                        isChecked = translate,
+                        onCheckedChange = { translate = it },
                     )
 
                     // 语言检测开关
                     RowOptionSwitch(
                         label = strings.settingsStrings.whisperSettingsStrings.detectLanguage,
-                        isChecked = whisperConfig.detectLanguage,
-                        onCheckedChange = { whisperConfig.detectLanguage = it },
+                        isChecked = detectLanguage,
+                        onCheckedChange = { detectLanguage = it },
                     )
 
-                    TextField(
-                        value = whisperConfig.language,
-                        onValueChange = { whisperConfig.language = it },
-                        label = {
-                            Text(
-                                strings.settingsStrings.whisperSettingsStrings.language,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
+                    SettingsTextField(
+                        value = language,
+                        label = strings.settingsStrings.whisperSettingsStrings.language,
+                        onValueChange = { language = it },
                     )
 
-                    // 初始提示文本
-                    OutlinedTextField(
-                        value = whisperConfig.initialPrompt ?: "",
-                        onValueChange = { whisperConfig.initialPrompt = it },
-                        label = {
-                            Text(
-                                text = strings.settingsStrings.whisperSettingsStrings.initialPrompt,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        },
+                    SettingsTextField(
+                        value = initialPrompt,
+                        label = strings.settingsStrings.whisperSettingsStrings.initialPrompt,
+                        onValueChange = { initialPrompt = it },
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     // 上下文开关
                     RowOptionSwitch(
                         label = strings.settingsStrings.whisperSettingsStrings.noContext,
-                        isChecked = whisperConfig.noContext,
-                        onCheckedChange = { whisperConfig.noContext = it },
+                        isChecked = noContext,
+                        onCheckedChange = { noContext = it },
                     )
 
                     // GPU 使用开关
                     RowOptionSwitch(
                         label = strings.settingsStrings.whisperSettingsStrings.useGPU,
-                        isChecked = whisperConfig.useGPU,
-                        onCheckedChange = { whisperConfig.useGPU = it },
+                        isChecked = useGPU,
+                        onCheckedChange = { useGPU = it },
                     )
+
                     var showWhisperLibPicker by remember { mutableStateOf(false) }
                     var showModelPicker by remember { mutableStateOf(false) }
 
                     FilePicker(showWhisperLibPicker, fileExtensions = listOf("so", "dylib")) { file ->
-                        whisperConfig.whisperLib = file?.path ?: whisperConfig.whisperLib
+                        whisperLib = file?.path ?: whisperLib
                         showWhisperLibPicker = false
                     }
 
                     FilePicker(showModelPicker, fileExtensions = listOf("bin")) { file ->
-                        whisperConfig.model = file?.path ?: whisperConfig.model
+                        model = file?.path ?: model
                         showModelPicker = false
                     }
 
@@ -664,15 +632,10 @@ fun Settings() {
                             text = strings.settingsStrings.whisperSettingsStrings.whisperLib,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
-                        OutlinedTextField(
-                            value = whisperConfig.whisperLib,
-                            onValueChange = { whisperConfig.whisperLib = it },
-                            label = {
-                                Text(
-                                    strings.settingsStrings.whisperSettingsStrings.whisperLibPath,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                            },
+                        SettingsTextField(
+                            value = whisperLib,
+                            label = strings.settingsStrings.whisperSettingsStrings.whisperLibPath,
+                            onValueChange = { whisperLib = it },
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         )
                         FilledTonalButton(
@@ -686,20 +649,14 @@ fun Settings() {
                                 color = MaterialTheme.colorScheme.onBackground,
                             )
                         }
-
                         Text(
-                            strings.settingsStrings.whisperSettingsStrings.whisperLib,
+                            strings.settingsStrings.whisperSettingsStrings.model,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
-                        OutlinedTextField(
-                            value = whisperConfig.model,
-                            onValueChange = { whisperConfig.model = it },
-                            label = {
-                                Text(
-                                    strings.settingsStrings.whisperSettingsStrings.whisperLibPath,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                            },
+                        SettingsTextField(
+                            value = model,
+                            label = strings.settingsStrings.whisperSettingsStrings.modelPath,
+                            onValueChange = { model = it },
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         )
                         FilledTonalButton(
@@ -709,15 +666,97 @@ fun Settings() {
                             modifier = Modifier.padding(16.dp),
                         ) {
                             Text(
-                                strings.settingsStrings.whisperSettingsStrings.selectWhisperLib,
+                                strings.settingsStrings.whisperSettingsStrings.selectModel,
                                 color = MaterialTheme.colorScheme.onBackground,
                             )
                         }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    FilledTonalButton(
+                        onClick = {
+                            Config.config.apply {
+                                openAiConfig.openAiBaseUrl = openAiBaseUrl
+                                openAiConfig.openAiApiKey = openAiApiKey.takeIf { it.isNotEmpty() }
+                                openAiConfig.promptTemplate = promptTemplate.takeIf { it.isNotEmpty() }
+                                openAiConfig.maxTokens = maxTokens
+                                openAiConfig.temperature = temperature
+                                openAiConfig.preferredModel = preferredModel
+                                openAiConfig.topic = topic.takeIf { it.isNotEmpty() }
+                                whisperConfig.nThreads = nThreads
+                                whisperConfig.stepMs = stepMs
+                                whisperConfig.lengthMs = lengthMs
+                                whisperConfig.keepMs = keepMs
+                                whisperConfig.delayMs = delayMs
+                                whisperConfig.translate = translate
+                                whisperConfig.detectLanguage = detectLanguage
+                                whisperConfig.language = language
+                                whisperConfig.initialPrompt = initialPrompt.takeIf { it.isNotEmpty() }
+                                whisperConfig.noContext = noContext
+                                whisperConfig.useGPU = useGPU
+                                whisperConfig.whisperLib = whisperLib
+                                whisperConfig.model = model
+                            }
+                            ConfigManager.saveConfig()
+                        },
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    ) {
+                        Text(
+                            strings.settingsStrings.saveSettings,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                    FilledTonalButton(
+                        onClick = {
+                            ConfigManager.deleteConfig()
+                            Config.config = ConfigManager.getConfig()
+                            ConfigManager.saveConfig()
+                            Singleton.showSettingsWindow = false
+                        },
+                        modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    ) {
+                        Text(
+                            strings.settingsStrings.resetSettings,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SettingsSectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(vertical = 10.dp),
+        fontSize = 30.sp,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+}
+
+@Composable
+fun SettingsTextField(
+    value: String,
+    label: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier =
+        Modifier.fillMaxWidth()
+            .padding(vertical = 4.dp),
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(text = label, color = MaterialTheme.colorScheme.onBackground) },
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -745,7 +784,7 @@ fun RowOptionSwitch(
 }
 
 @Composable
-fun PreferableDialog(onDismissRequest: () -> Unit) {
+fun PreferableMaterialThemeDialog(onDismissRequest: () -> Unit) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier =
@@ -755,14 +794,14 @@ fun PreferableDialog(onDismissRequest: () -> Unit) {
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
-            PreferableMaterialTheme { // provides composition locals
-                SettingsScaffold { // includes TopAppBar
+            PreferableMaterialTheme {
+                SettingsScaffold {
                     Box {
                         Column {
-                            ThemePreferencesCategory() // subtitle
-                            ThemePreferenceItem() // menu item
+                            ThemePreferencesCategory()
+                            ThemePreferenceItem()
                         }
-                        themePrefs.showDialogIfNeed() // shows when menu item clicked
+                        themePrefs.showDialogIfNeed()
                     }
                 }
             }
@@ -784,8 +823,8 @@ fun main() =
             if (Singleton.showSettingsWindow) {
                 Settings()
             }
-            if (Singleton.showPreferableDialog) {
-                PreferableDialog { Singleton.showPreferableDialog = false }
+            if (Singleton.showPreferableMaterialThemeDialog) {
+                PreferableMaterialThemeDialog { Singleton.showPreferableMaterialThemeDialog = false }
             }
         }
     }

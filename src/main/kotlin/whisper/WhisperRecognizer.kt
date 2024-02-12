@@ -17,7 +17,7 @@ class WhisperRecognizer {
     companion object {
         private val job = Job()
         val scope = CoroutineScope(Dispatchers.Default + job)
-        val nThreads = minOf(Config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
+        val nThreads = minOf(Config.config.whisperConfig.nThreads, Runtime.getRuntime().availableProcessors())
         lateinit var whisper: WhisperJNI
         lateinit var whisperContext: WhisperContext
         var whisperFullParams: WhisperFullParams = WhisperFullParams(WhisperSamplingStrategy.GREEDY)
@@ -31,49 +31,51 @@ class WhisperRecognizer {
         lateinit var samples: FloatArray
         var useVad = false
         var nNewLine = 1
-        var promptTokens: String? = Config.whisperConfig.initialPrompt
+        var promptTokens: String? = Config.config.whisperConfig.initialPrompt
         var tLast = 0
         var tFirst = 0
     }
 
     init {
-        Config.whisperConfig.keepMs = min(Config.whisperConfig.keepMs, Config.whisperConfig.stepMs)
-        Config.whisperConfig.lengthMs = max(Config.whisperConfig.lengthMs, Config.whisperConfig.stepMs)
-        nSamplesStep = Config.whisperConfig.stepMs * 1e-3 * Config.whisperConfig.sampleRate
-        nSamplesLen = Config.whisperConfig.lengthMs * 1e-3 * Config.whisperConfig.sampleRate
-        nSamplesKeep = Config.whisperConfig.keepMs * 1e-3 * Config.whisperConfig.sampleRate
-        nSamples30s = 30000.0 * 1e-3 * Config.whisperConfig.sampleRate
+        Config.config.whisperConfig.keepMs = min(Config.config.whisperConfig.keepMs, Config.config.whisperConfig.stepMs)
+        Config.config.whisperConfig.lengthMs =
+            max(Config.config.whisperConfig.lengthMs, Config.config.whisperConfig.stepMs)
+        nSamplesStep = Config.config.whisperConfig.stepMs * 1e-3 * Config.config.whisperConfig.sampleRate
+        nSamplesLen = Config.config.whisperConfig.lengthMs * 1e-3 * Config.config.whisperConfig.sampleRate
+        nSamplesKeep = Config.config.whisperConfig.keepMs * 1e-3 * Config.config.whisperConfig.sampleRate
+        nSamples30s = 30000.0 * 1e-3 * Config.config.whisperConfig.sampleRate
         useVad = nSamplesStep <= 0
-        nNewLine = if (!useVad) max(1, Config.whisperConfig.lengthMs / Config.whisperConfig.stepMs - 1) else 1
+        nNewLine =
+            if (!useVad) max(1, Config.config.whisperConfig.lengthMs / Config.config.whisperConfig.stepMs - 1) else 1
         whisperFullParams.nThreads = nThreads
         whisperFullParams.noTimestamps = !useVad
-        whisperFullParams.noContext = Config.whisperConfig.noContext || useVad
+        whisperFullParams.noContext = Config.config.whisperConfig.noContext || useVad
         whisperFullParams.printProgress = false
-        whisperFullParams.printSpecial = Config.whisperConfig.printSpecial
+        whisperFullParams.printSpecial = Config.config.whisperConfig.printSpecial
         whisperFullParams.printRealtime = false
-        whisperFullParams.printTimestamps = !Config.whisperConfig.noTimestamps
+        whisperFullParams.printTimestamps = !Config.config.whisperConfig.noTimestamps
         whisperFullParams.singleSegment = !useVad
-        whisperFullParams.translate = Config.whisperConfig.translate
-        whisperFullParams.audioCtx = Config.whisperConfig.audioCtx
-        whisperFullParams.speedUp = Config.whisperConfig.speedUp
-        whisperFullParams.language = Config.whisperConfig.language
-        whisperFullParams.initialPrompt = Config.whisperConfig.initialPrompt
+        whisperFullParams.translate = Config.config.whisperConfig.translate
+        whisperFullParams.audioCtx = Config.config.whisperConfig.audioCtx
+        whisperFullParams.speedUp = Config.config.whisperConfig.speedUp
+        whisperFullParams.language = Config.config.whisperConfig.language
+        whisperFullParams.initialPrompt = Config.config.whisperConfig.initialPrompt
         whisperFullParams.temperatureInc =
-            if (Config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
+            if (Config.config.whisperConfig.noFallback) 0.0f else whisperFullParams.temperatureInc
         val loadOptions =
             WhisperJNI.LoadOptions().apply {
                 logger = WhisperJNI.LibraryLogger { println(it) }
-                whisperLib = Paths.get(Config.whisperConfig.whisperLib)
+                whisperLib = Paths.get(Config.config.whisperConfig.whisperLib)
             }
         WhisperJNI.loadLibrary(loadOptions)
         WhisperJNI.setLibraryLogger(null)
         whisper = WhisperJNI()
         val whisperContextParams = WhisperContextParams()
-        whisperContextParams.useGPU = Config.whisperConfig.useGPU
-        whisperContext = whisper.init(Paths.get(Config.whisperConfig.model), whisperContextParams)
+        whisperContextParams.useGPU = Config.config.whisperConfig.useGPU
+        whisperContext = whisper.init(Paths.get(Config.config.whisperConfig.model), whisperContextParams)
         if (!whisper.isMultilingual(whisperContext)) {
-            if (Config.whisperConfig.translate) {
-                Config.whisperConfig.translate = false
+            if (Config.config.whisperConfig.translate) {
+                Config.config.whisperConfig.translate = false
                 System.err.println("警告：模型不是多语言的，忽略语言和翻译选项")
             }
         }
@@ -92,11 +94,11 @@ class WhisperRecognizer {
                 }
                 val samplesArray = Singleton.audio.get()
                 if (samplesArray == null) {
-                    Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
+                    Thread.sleep(Config.config.whisperConfig.delayMs * Random.nextInt(1, 11))
                     continue
                 }
                 samplesNew = samplesArray.toMutableList()
-                tLast = (tLast + samplesNew.size / Config.whisperConfig.sampleRate * 2).toInt()
+                tLast = (tLast + samplesNew.size / Config.config.whisperConfig.sampleRate * 2).toInt()
                 if (!useVad) {
                     val nSamplesNew = samplesNew.size
                     val nSamplesTake = min(samplesOld.size, max(0, (nSamplesKeep + nSamplesLen - nSamplesNew).toInt()))
@@ -108,20 +110,20 @@ class WhisperRecognizer {
                         samples[nSamplesTake + i] = samplesNew[i]
                     }
                     samplesOld = samples.toMutableList()
-                    tFirst = (tLast - (nSamplesNew + nSamplesTake) / Config.whisperConfig.sampleRate * 2).toInt()
+                    tFirst = (tLast - (nSamplesNew + nSamplesTake) / Config.config.whisperConfig.sampleRate * 2).toInt()
                 } else {
                     if (vadSimple(
                             samplesNew.toFloatArray(),
-                            Config.whisperConfig.sampleRate,
+                            Config.config.whisperConfig.sampleRate,
                             1000,
-                            Config.whisperConfig.vadThold,
-                            Config.whisperConfig.freqThold,
+                            Config.config.whisperConfig.vadThold,
+                            Config.config.whisperConfig.freqThold,
                         )
                     ) {
                         samples = samplesArray
-                        tFirst = (tLast - samples.size / Config.whisperConfig.sampleRate * 2).toInt()
+                        tFirst = (tLast - samples.size / Config.config.whisperConfig.sampleRate * 2).toInt()
                     } else {
-                        Thread.sleep(Config.whisperConfig.delayMs * Random.nextInt(1, 11))
+                        Thread.sleep(Config.config.whisperConfig.delayMs * Random.nextInt(1, 11))
                         continue
                     }
                 }
@@ -145,14 +147,14 @@ class WhisperRecognizer {
                 nIter++
                 if (!useVad && (nIter % nNewLine) == 0) {
                     samplesOld = samples.takeLast(nSamplesKeep.toInt()).toMutableList()
-                    if (!Config.whisperConfig.noContext) {
+                    if (!Config.config.whisperConfig.noContext) {
                         for (i in 0 until nSegments) {
                             val text = whisper.fullGetSegmentText(whisperContext, i)
                             promptTokens += text
                         }
                     }
                 }
-                Thread.sleep(Config.whisperConfig.delayMs)
+                Thread.sleep(Config.config.whisperConfig.delayMs)
             }
         }
 

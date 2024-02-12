@@ -21,12 +21,12 @@ class Audio {
             CoroutineScope(
                 Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
             )
-        private var mLenMs = Config.whisperConfig.lengthMs
-        private var mSampleRate = Config.whisperConfig.sampleRate
+        private var mLenMs = Config.config.whisperConfig.lengthMs
+        private var mSampleRate = Config.config.whisperConfig.sampleRate
         private var audioFormat: AudioFormat =
             AudioFormat(
                 mSampleRate,
-                Config.whisperConfig.sampleSizeInBits,
+                Config.config.whisperConfig.sampleSizeInBits,
                 1,
                 true,
                 false,
@@ -91,7 +91,7 @@ class Audio {
                         audioQueue.add(samples)
                     }
                 }
-                Thread.sleep(Config.whisperConfig.delayMs)
+                Thread.sleep(Config.config.whisperConfig.delayMs)
             }
         }
 

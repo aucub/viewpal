@@ -10,6 +10,8 @@ internal val EnStrings =
         settingsTitle = "Settings",
         settingsStrings =
         SettingsStrings(
+            saveSettings = "Save Settings",
+            resetSettings = "Reset Settings",
             openAiSettingsStrings =
             OpenAiSettingsStrings(
                 openAiSettingsTitle = "OpenAI Config",

@@ -9,12 +9,14 @@ import dev.langchain4j.model.openai.OpenAiTokenizer
 
 class AnswerGenerator {
     companion object {
-        private var tokenizer = OpenAiTokenizer(Config.config.preferredModel)
+        private var tokenizer = OpenAiTokenizer(Config.config.openAiConfig.preferredModel)
         private var model: ChatLanguageModel =
-            OpenAiChatModel.builder().modelName(Config.config.preferredModel).maxTokens(Config.config.maxTokens)
-                .tokenizer(tokenizer).temperature(Config.config.temperature).apiKey(Config.config.openAiApiKey)
-                .baseUrl(Config.config.openAiBaseUrl).build()
-        private var chatMemory = TokenWindowChatMemory.withMaxTokens(Config.config.maxTokens, tokenizer)
+            OpenAiChatModel.builder().modelName(Config.config.openAiConfig.preferredModel)
+                .maxTokens(Config.config.openAiConfig.maxTokens)
+                .tokenizer(tokenizer).temperature(Config.config.openAiConfig.temperature)
+                .apiKey(Config.config.openAiConfig.openAiApiKey)
+                .baseUrl(Config.config.openAiConfig.openAiBaseUrl).build()
+        private var chatMemory = TokenWindowChatMemory.withMaxTokens(Config.config.openAiConfig.maxTokens, tokenizer)
 
         fun generateAnswer(prompt: String): String {
             chatMemory.add(UserMessage.from(prompt))
