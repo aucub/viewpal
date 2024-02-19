@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
     id("io.realm.kotlin") version "1.13.0"
-    id("com.mikepenz.aboutlibraries.plugin") version "11.1.0-b01"
+    id("com.mikepenz.aboutlibraries.plugin") version "11.1.0-b02"
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
 }
 
