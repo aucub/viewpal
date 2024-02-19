@@ -22,8 +22,8 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0")
     implementation("io.github.givimad:whisper-jni:1.5.2")
     implementation("dev.langchain4j:langchain4j:0.27.1")
     implementation("dev.langchain4j:langchain4j-open-ai:0.27.1")
