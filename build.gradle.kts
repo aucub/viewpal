@@ -24,7 +24,7 @@ dependencies {
     implementation(compose.material3)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
-    implementation("io.github.givimad:whisper-jni:1.5.2")
+    implementation("io.github.givimad:whisper-jni:1.5.4")
     implementation("dev.langchain4j:langchain4j:0.27.1")
     implementation("dev.langchain4j:langchain4j-open-ai:0.27.1")
     implementation("io.realm.kotlin:library-base:1.13.0")
