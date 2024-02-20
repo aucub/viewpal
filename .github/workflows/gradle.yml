@@ -30,7 +30,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v2.1.1
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3.0.0
+        uses: gradle/gradle-build-action@v3.1.0
         with:
           gradle-version: current
           arguments: packageDistributionForCurrentOS --warning-mode all
@@ -60,7 +60,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v2.1.1
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3.0.0
+        uses: gradle/gradle-build-action@v3.1.0
         with:
           gradle-version: current
           arguments: build
