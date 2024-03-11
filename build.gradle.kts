@@ -29,7 +29,7 @@ dependencies {
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0")
     implementation("dev.langchain4j:langchain4j:0.27.1")
     implementation("dev.langchain4j:langchain4j-open-ai:0.27.1")
-    implementation("io.realm.kotlin:library-base:1.13.0")
+    implementation("io.realm.kotlin:library-base:1.14.0")
     implementation("org.jetbrains.compose.material3:material3-desktop:1.6.0")
     implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.6.0")
     implementation("com.mikepenz:aboutlibraries-core:11.1.0")
