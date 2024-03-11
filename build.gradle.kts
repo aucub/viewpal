@@ -8,7 +8,7 @@ plugins {
     id("org.jetbrains.compose")
     id("io.realm.kotlin") version "1.13.0"
     id("com.mikepenz.aboutlibraries.plugin") version "11.1.0"
-    id("com.google.devtools.ksp") version "1.9.22-1.0.18"
+    id("com.google.devtools.ksp") version "1.9.23-1.0.19"
     kotlin("plugin.serialization") version "1.9.22"
 }
 
