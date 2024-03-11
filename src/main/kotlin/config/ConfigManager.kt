@@ -11,10 +11,10 @@ class ConfigManager {
     companion object {
         private var audioConfiguration = RealmConfiguration.create(schema = setOf(AudioConfig::class))
         private var openAiConfiguration = RealmConfiguration.create(schema = setOf(OpenAiConfig::class))
-        private var whisperConfiguration = RealmConfiguration.create(schema = setOf(WhisperConfig::class))
+        private var workersAiConfiguration = RealmConfiguration.create(schema = setOf(WorkersAiConfig::class))
         private var audioRealm: Realm = Realm.open(audioConfiguration)
         private var openAiRealm: Realm = Realm.open(openAiConfiguration)
-        private var whisperRealm: Realm = Realm.open(whisperConfiguration)
+        private var workersAiRealm: Realm = Realm.open(workersAiConfiguration)
 
         fun saveConfig() {
             audioRealm.writeBlocking {
@@ -23,8 +23,8 @@ class ConfigManager {
             openAiRealm.writeBlocking {
                 copyToRealm(Config.config.openAiConfig, UpdatePolicy.ALL)
             }
-            whisperRealm.writeBlocking {
-                copyToRealm(Config.config.whisperConfig, UpdatePolicy.ALL)
+            workersAiRealm.writeBlocking {
+                copyToRealm(Config.config.workersAiConfig, UpdatePolicy.ALL)
             }
         }
 
@@ -38,9 +38,9 @@ class ConfigManager {
             if (openAiConfigItems.isNotEmpty()) {
                 config.openAiConfig = openAiConfigItems[0].copyFromRealm()
             }
-            val whisperConfigItems: RealmResults<WhisperConfig> = whisperRealm.query<WhisperConfig>().find()
-            if (whisperConfigItems.isNotEmpty()) {
-                config.whisperConfig = whisperConfigItems[0].copyFromRealm()
+            val workersAiConfigItems: RealmResults<WorkersAiConfig> = workersAiRealm.query<WorkersAiConfig>().find()
+            if (workersAiConfigItems.isNotEmpty()) {
+                config.workersAiConfig = workersAiConfigItems[0].copyFromRealm()
             }
             return config
         }
@@ -54,8 +54,8 @@ class ConfigManager {
                 val writeTransactionItems = query<OpenAiConfig>().find()
                 delete(writeTransactionItems.first())
             }
-            whisperRealm.writeBlocking {
-                val writeTransactionItems = query<WhisperConfig>().find()
+            workersAiRealm.writeBlocking {
+                val writeTransactionItems = query<WorkersAiConfig>().find()
                 delete(writeTransactionItems.first())
             }
         }

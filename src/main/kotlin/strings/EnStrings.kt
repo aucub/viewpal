@@ -17,46 +17,26 @@ internal val EnStrings =
                 audioSettingsTitle = "Audio Config",
                 audioDevice = "Audio Device",
                 audioDeviceDefault = "Default Device",
+                translate = "Translate",
+                language = "Language",
+                lengthMs = "Length (ms)",
+                delayMs = "Delay (ms)"
             ),
             openAiSettingsStrings =
             OpenAiSettingsStrings(
                 openAiSettingsTitle = "OpenAI Config",
                 openAiBaseUrl = "OpenAI Base URL",
                 openAiApiKey = "OpenAI API Key",
-                promptTemplate = "Prompt Template",
+                systemPrompt = "System Prompt",
                 maxTokens = "Max Tokens",
                 temperature = "Temperature",
                 preferredModel = "Preferred Model",
-                topic = "Topic",
             ),
-            whisperSettingsStrings =
-            WhisperSettingsStrings(
-                whisperSettingsTitle = "Whisper Config",
-                nThreads = "Number of Threads",
-                stepMs = "Step (ms)",
-                lengthMs = "Length (ms)",
-                keepMs = "Keep (ms)",
-                delayMs = "Delay (ms)",
-                translate = "Translate",
-                detectLanguage = "DetectLanguage",
-                language = "Language",
-                initialPrompt = "Initial Prompt",
-                noContext = "Disable Context",
-                useGPU = "Use GPU",
-                whisperLib = "Whisper Library",
-                whisperLibPath = "Whisper Library Path",
-                selectWhisperLib = "Select Whisper Library",
-                model = "Model Binary",
-                modelPath = "Model Binary Path",
-                selectModel = "Select Model Binary",
-            ),
-        ),
-        spotlightActionsStrings =
-        SpotlightActionsStrings(
-            first = "First",
-            previous = "Prev",
-            next = "Next",
-            last = "Last",
+            workersAiSettingsStrings = WorkersAiSettingsStrings(
+                workersAiSettingsTitle = "WorkersAI Config",
+                accountId = "ACCOUNT ID",
+                apiToken = "API token"
+            )
         ),
         contentDescriptionStrings =
         ContentDescriptionStrings(

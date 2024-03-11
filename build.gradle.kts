@@ -1,12 +1,15 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val ktorVersion: String by project
+
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
     id("io.realm.kotlin") version "1.13.0"
     id("com.mikepenz.aboutlibraries.plugin") version "11.1.0"
     id("com.google.devtools.ksp") version "1.9.22-1.0.18"
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "com.pal"
@@ -24,7 +27,6 @@ dependencies {
     implementation(compose.material3)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0")
-    implementation("io.github.givimad:whisper-jni:1.5.4")
     implementation("dev.langchain4j:langchain4j:0.27.1")
     implementation("dev.langchain4j:langchain4j-open-ai:0.27.1")
     implementation("io.realm.kotlin:library-base:1.13.0")
@@ -42,6 +44,16 @@ dependencies {
     implementation("io.github.softartdev:theme-material3:0.6.4")
     implementation("cafe.adriel.lyricist:lyricist:1.6.2-1.8.20")
     ksp("cafe.adriel.lyricist:lyricist-processor:1.6.2-1.8.20")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-client-encoding:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("com.mikepenz:multiplatform-markdown-renderer:0.13.0")
+    implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.13.0")
+    implementation("com.mikepenz:multiplatform-markdown-renderer-jvm:0.13.0")
 }
 
 ksp {
