@@ -6,7 +6,7 @@ val ktorVersion: String by project
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
-    id("io.realm.kotlin") version "1.13.0"
+    id("io.realm.kotlin") version "1.14.0"
     id("com.mikepenz.aboutlibraries.plugin") version "11.1.0"
     id("com.google.devtools.ksp") version "1.9.22-1.0.18"
     kotlin("plugin.serialization") version "1.9.22"
