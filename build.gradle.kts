@@ -9,7 +9,7 @@ plugins {
     id("io.realm.kotlin") version "1.13.0"
     id("com.mikepenz.aboutlibraries.plugin") version "11.1.0"
     id("com.google.devtools.ksp") version "1.9.22-1.0.18"
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.23"
 }
 
 group = "com.pal"
