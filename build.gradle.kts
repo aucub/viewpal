@@ -41,7 +41,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
     implementation("com.darkrockstudios:mpfilepicker:3.1.0")
     implementation("com.darkrockstudios:mpfilepicker-jvm:3.1.0")
-    implementation("io.github.softartdev:theme-material3:0.6.4")
+    implementation("io.github.softartdev:theme-material3:0.6.6")
     implementation("cafe.adriel.lyricist:lyricist:1.6.2-1.8.20")
     ksp("cafe.adriel.lyricist:lyricist-processor:1.6.2-1.8.20")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
